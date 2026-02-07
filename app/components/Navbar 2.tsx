@@ -17,7 +17,7 @@ export default function Navbar() {
             </svg>
           </div>
           <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-            NFTickets
+            fen
           </span>
           <span className="badge badge-indigo text-[10px] -ml-1">BETA</span>
         </Link>
@@ -44,26 +44,9 @@ export default function Navbar() {
           >
             Events
           </Link>
-          <Link
-            href="/my-tickets"
-            className={`text-sm font-medium transition-colors duration-200 ${
-              pathname === "/my-tickets"
-                ? "text-[var(--text-primary)]"
-                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-            }`}
-          >
+          <span className="text-sm text-[var(--text-muted)] cursor-default select-none opacity-50">
             My Tickets
-          </Link>
-          <Link
-            href="/marketplace"
-            className={`text-sm font-medium transition-colors duration-200 ${
-              pathname === "/marketplace"
-                ? "text-[var(--text-primary)]"
-                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-            }`}
-          >
-            Marketplace
-          </Link>
+          </span>
           <div className="h-4 w-px bg-black/5" />
           <div className="badge badge-cyan text-[10px]">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-1.5 animate-pulse" />

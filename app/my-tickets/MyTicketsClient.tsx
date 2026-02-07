@@ -60,11 +60,13 @@ export default function MyTicketsClient() {
   }, [walletAddr]);
 
   async function handleResale(ticket: any) {
-    const requestedPrice = prompt("Enter resale price in XRP:");
-    if (!requestedPrice) return;
-
     const tier = getTier(ticket.eventId, ticket.tierId);
     const maxPrice = maxResalePriceXrp(tier.priceXrp, tier.resaleCapBps);
+
+    const requestedPrice = prompt(
+      `Enter resale price in XRP (Max: ${maxPrice} XRP):`
+    );
+    if (!requestedPrice) return;
 
     if (Number(requestedPrice) > Number(maxPrice)) {
       alert(
@@ -76,124 +78,85 @@ export default function MyTicketsClient() {
     setReselling(true);
     setStatus(`Creating sell offer for ${requestedPrice} XRP…`);
 
-<<<<<<< HEAD
     const client = new xrpl.Client(xrplWs);
     try {
       await client.connect();
       const wallet = xrpl.Wallet.fromSeed(seed.trim());
 
-      const nftsRes = await client.request({
-        command: "account_nfts",
-        account: walletAddr,
-      });
-
-      const nft = (nftsRes.result.account_nfts as any[]).find(() => true);
-=======
-    async function handleResale(ticket: any) {
-        const event = getEvent(ticket.eventId);
-        const tier = getTier(ticket.eventId, ticket.tierId);
-        const maxPrice = maxResalePriceXrp(tier.priceXrp, tier.resaleCapBps);
-
-        const requestedPrice = prompt(`Enter resale price in XRP (Max: ${maxPrice} XRP):`);
-        if (!requestedPrice) return;
-
-        if (Number(requestedPrice) > Number(maxPrice)) {
-            alert(`Price exceeds ceiling! Max allowed: ${maxPrice} XRP (+${tier.resaleCapBps / 100}%).`);
-            return;
-        }
->>>>>>> main
-
-      if (!nft) {
-        setStatus("Could not find NFT on-ledger for this wallet.");
-        setReselling(false);
-        return;
-      }
-
       const sellOffer: xrpl.NFTokenCreateOffer = {
         TransactionType: "NFTokenCreateOffer",
         Account: walletAddr,
-        NFTokenID: nft.NFTokenID,
+        NFTokenID: ticket.nftId,
         Amount: xrpl.xrpToDrops(requestedPrice),
         Flags: xrpl.NFTokenCreateOfferFlags.tfSellNFToken,
       };
 
-<<<<<<< HEAD
       const result = await client.submitAndWait(sellOffer, { wallet });
 
-      await fetch("/api/tickets/resale", {
+      // Extract the actual Offer Index from metadata
+      const affectedNodes = (result.result as any).meta.AffectedNodes;
+      let offerIndex = "";
+      for (const node of affectedNodes) {
+        if (node.CreatedNode?.LedgerEntryType === "NFTokenOffer") {
+          offerIndex = node.CreatedNode.LedgerIndex;
+          break;
+        }
+      }
+
+      // Fallback: query nft_sell_offers to find the one we just created
+      if (!offerIndex) {
+        try {
+          const sellOffers = await client.request({
+            command: "nft_sell_offers",
+            nft_id: ticket.nftId,
+          });
+          const myOffer = (sellOffers.result.offers as any[]).find(
+            (o) => o.owner === walletAddr
+          );
+          if (myOffer) {
+            offerIndex = myOffer.nft_offer_index;
+          }
+        } catch {
+          console.warn("Could not look up sell offer index as fallback");
+        }
+      }
+
+      if (!offerIndex) {
+        setStatus(
+          "⚠️ Offer created on-chain but could not extract offer index. Marketplace buyers can still find it on-ledger."
+        );
+      }
+
+      // Save to backend
+      const res = await fetch("/api/tickets/resale", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           offerId: (result.result as any).hash,
-          nftId: nft.NFTokenID,
+          nftId: ticket.nftId,
           seller: walletAddr,
           priceXrp: requestedPrice,
           eventId: ticket.eventId,
           tierId: ticket.tierId,
+          offerIndex: offerIndex,
         }),
       });
 
-      setStatus("✅ Resale offer created on XRPL!");
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus(`Backend save failed: ${data.error}`);
+        setReselling(false);
+        return;
+      }
+
+      setStatus(
+        `✅ Resale offer created! Tx: ${(result.result as any).hash}`
+      );
     } catch (e: any) {
       setStatus(`Error: ${e.message}`);
     } finally {
       setReselling(false);
       await client.disconnect();
-=======
-            // 1) Submit the NFTokenCreateOffer on XRPL
-            const sellOffer: xrpl.NFTokenCreateOffer = {
-                TransactionType: "NFTokenCreateOffer",
-                Account: walletAddr,
-                NFTokenID: ticket.nftId, // Use the correct ID from our DB
-                Amount: xrpl.xrpToDrops(requestedPrice),
-                Flags: xrpl.NFTokenCreateOfferFlags.tfSellNFToken,
-            };
-
-            const result = await client.submitAndWait(sellOffer, { wallet });
-
-            // Extract the actual Offer Index from metadata
-            const affectedNodes = (result.result as any).meta.AffectedNodes;
-            let offerIndex = "";
-            for (const node of affectedNodes) {
-                if (node.CreatedNode?.LedgerEntryType === "NFTokenOffer") {
-                    offerIndex = node.CreatedNode.LedgerIndex;
-                    break;
-                }
-            }
-
-            if (!offerIndex) {
-                // Fallback if metadata is tricky, but CreatedNode is usually clear
-                setStatus("✅ Offer created, but could not extract offer index. Backend may need manual sync.");
-            }
-
-            // 2) Save to backend
-            const res = await fetch("/api/tickets/resale", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    offerId: (result.result as any).hash,
-                    nftId: ticket.nftId,
-                    seller: walletAddr,
-                    priceXrp: requestedPrice,
-                    eventId: ticket.eventId,
-                    tierId: ticket.tierId,
-                    offerIndex: offerIndex
-                }),
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                setStatus(`Backend save failed: ${data.error}`);
-                return;
-            }
-
-            setStatus(`✅ Resale offer created! Tx: ${(result.result as any).hash}`);
-        } catch (e: any) {
-            setStatus(`Error: ${e.message}`);
-        } finally {
-            await client.disconnect();
-        }
->>>>>>> main
     }
   }
 
@@ -218,65 +181,11 @@ export default function MyTicketsClient() {
         )}
       </div>
 
-<<<<<<< HEAD
       {/* Loading */}
       {loading && (
         <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
           <span className="spinner spinner-sm spinner-indigo" />
           Fetching tickets…
-=======
-            {loading && <div>Fetching tickets from database…</div>}
-
-            {!loading && tickets.length === 0 && walletAddr && (
-                <div style={{ padding: 40, textAlign: "center", border: "1px dashed #333", borderRadius: 8 }}>
-                    No tickets found for this wallet.
-                </div>
-            )}
-
-            <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-                {tickets.map((t, i) => {
-                    const event = getEvent(t.eventId);
-                    const tier = getTier(t.eventId, t.tierId);
-                    return (
-                        <div key={i} style={{ padding: 16, border: "1px solid #333", borderRadius: 12, background: "#0c0c0c" }}>
-                            <div style={{ fontSize: 12, color: "#888", marginBottom: 4 }}>NFT TICKET</div>
-                            <h3 style={{ margin: "0 0 8px 0" }}>{event.name}</h3>
-                            <div style={{ fontSize: 14, opacity: 0.8 }}>{tier.name}</div>
-                            <div style={{ fontSize: 13, marginTop: 8 }}>
-                                <b>Venue:</b> {event.venueName}<br />
-                                <b>Date:</b> {new Date(event.startTimeISO).toLocaleDateString()}<br />
-                                {t.nftId && (
-                                    <div style={{ marginTop: 4 }}>
-                                        <a href={explorerUrl("nft", t.nftId)} target="_blank" rel="noopener noreferrer" style={{ color: "#0070f3", fontSize: 12 }}>
-                                            View NFT on Explorer ↗
-                                        </a>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #222" }}>
-                                <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 8 }}>
-                                    Max Resale: {maxResalePriceXrp(tier.priceXrp, tier.resaleCapBps)} XRP
-                                </div>
-                                <button
-                                    onClick={() => handleResale(t)}
-                                    style={{ width: "100%", padding: 8, background: "transparent", border: "1px solid #444", color: "#fff", borderRadius: 4, cursor: "pointer" }}
-                                >
-                                    List for Resale
-                                </button>
-                            </div>
-
-                        </div>
-                    );
-                })}
-            </div>
-
-            {status && (
-                <div style={{ padding: 12, background: "#222", borderRadius: 8, fontSize: 14 }}>
-                    {status}
-                </div>
-            )}
->>>>>>> main
         </div>
       )}
 
@@ -331,6 +240,9 @@ export default function MyTicketsClient() {
               </div>
 
               <div className="pt-3 border-t border-black/5">
+                <div className="text-[10px] text-[var(--text-muted)] mb-2">
+                  Max Resale: {maxResalePriceXrp(tier.priceXrp, tier.resaleCapBps)} XRP
+                </div>
                 <button
                   onClick={() => handleResale(t)}
                   disabled={reselling}

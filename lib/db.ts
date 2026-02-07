@@ -30,7 +30,12 @@ db.exec(`
     priceXrp TEXT NOT NULL,
     eventId TEXT NOT NULL,
     tierId TEXT NOT NULL,
-    offerIndex TEXT -- The XRPL NFTokenOffer index
+    offerIndex TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS scores (
+    wallet TEXT PRIMARY KEY,
+    score INTEGER NOT NULL DEFAULT 0
   );
 `);
 
@@ -39,7 +44,6 @@ try {
     const columns = db.prepare("PRAGMA table_info(offers)").all();
     const hasOfferIndex = (columns as any[]).some(c => c.name === "offerIndex");
     if (!hasOfferIndex) {
-        console.log("[DB] Adding offerIndex column to offers table...");
         db.exec("ALTER TABLE offers ADD COLUMN offerIndex TEXT;");
     }
 } catch (e) {
@@ -49,21 +53,19 @@ try {
 export const fenDb = {
     queue: {
         find: (predicate: (q: any) => boolean) => {
-            const stmt = db.prepare("SELECT * FROM queue");
-            const rows = stmt.all();
+            const rows = db.prepare("SELECT * FROM queue").all();
             return rows.find(predicate);
         },
         filter: (predicate: (q: any) => boolean) => {
-            const stmt = db.prepare("SELECT * FROM queue");
-            const rows = stmt.all();
+            const rows = db.prepare("SELECT * FROM queue").all();
             return rows.filter(predicate);
         },
         push: (entry: any) => {
             const stmt = db.prepare(`
-        INSERT INTO queue (eventId, tierId, wallet, stakeXrp, commitHash, commitTxHash, createdAt, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-            stmt.run(
+                INSERT INTO queue (eventId, tierId, wallet, stakeXrp, commitHash, commitTxHash, createdAt, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+            const result = stmt.run(
                 entry.eventId,
                 entry.tierId,
                 entry.wallet,
@@ -73,29 +75,42 @@ export const fenDb = {
                 entry.createdAt,
                 entry.status
             );
+            return result.lastInsertRowid;
         },
-        update: (wallet: string, updates: any) => {
+        updateById: (id: number, updates: any) => {
             const keys = Object.keys(updates);
             const setClause = keys.map(k => `${k} = ?`).join(", ");
-            const stmt = db.prepare(`UPDATE queue SET ${setClause} WHERE wallet = ?`);
-            stmt.run(...Object.values(updates), wallet);
+            const stmt = db.prepare(`UPDATE queue SET ${setClause} WHERE id = ?`);
+            stmt.run(...Object.values(updates), id);
         },
         getAll: () => db.prepare("SELECT * FROM queue ORDER BY createdAt ASC").all()
     },
     offers: {
         push: (offer: any) => {
             const stmt = db.prepare(`
-        INSERT INTO offers (offerId, nftId, seller, priceXrp, eventId, tierId, offerIndex)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `);
+                INSERT INTO offers (offerId, nftId, seller, priceXrp, eventId, tierId, offerIndex)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `);
             stmt.run(offer.offerId, offer.nftId, offer.seller, offer.priceXrp, offer.eventId, offer.tierId, offer.offerIndex);
         },
-
         getAll: () => db.prepare("SELECT * FROM offers").all(),
         find: (predicate: (o: any) => boolean) => {
-            const stmt = db.prepare("SELECT * FROM offers");
-            const rows = stmt.all();
+            const rows = db.prepare("SELECT * FROM offers").all();
             return rows.find(predicate);
         }
+    },
+    scores: {
+        get: (wallet: string): number => {
+            const row = db.prepare("SELECT score FROM scores WHERE wallet = ?").get(wallet) as any;
+            return row ? row.score : 0;
+        },
+        increment: (wallet: string, delta: number) => {
+            const current = fenDb.scores.get(wallet);
+            const newScore = Math.max(0, Math.min(100, current + delta));
+            db.prepare(
+                "INSERT INTO scores (wallet, score) VALUES (?, ?) ON CONFLICT(wallet) DO UPDATE SET score = ?"
+            ).run(wallet, newScore, newScore);
+            return newScore;
+        },
     }
 };

@@ -10,11 +10,22 @@ export default function MarketplaceClient() {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
-  const [buying, setBuying] = useState(false);
+  const [buyingId, setBuyingId] = useState<string | null>(null);
 
   const xrplWs = process.env.NEXT_PUBLIC_XRPL_WS!;
 
-<<<<<<< HEAD
+  const explorerUrl = (type: "tx" | "nft" | "address", id: string) =>
+    `https://testnet.xrpl.org/${type === "tx" ? "transactions" : type}/${id}`;
+
+  useEffect(() => {
+    const savedSeed = localStorage.getItem("fen_wallet_seed");
+    if (savedSeed) setSeed(savedSeed);
+  }, []);
+
+  useEffect(() => {
+    if (seed) localStorage.setItem("fen_wallet_seed", seed);
+  }, [seed]);
+
   useEffect(() => {
     try {
       if (!seed.trim()) {
@@ -25,50 +36,9 @@ export default function MarketplaceClient() {
       setWalletAddr(w.classicAddress);
     } catch {
       setWalletAddr("");
-=======
-    // Helper for explorer links
-    const explorerUrl = (type: "tx" | "nft" | "address", id: string) => `https://testnet.xrpl.org/${type === "tx" ? "transactions" : type}/${id}`;
-
-    // Persist seed
-    useEffect(() => {
-        const savedSeed = localStorage.getItem("fen_wallet_seed");
-        if (savedSeed) setSeed(savedSeed);
-    }, []);
-
-    useEffect(() => {
-        if (seed) localStorage.setItem("fen_wallet_seed", seed);
-    }, [seed]);
-
-    // Derive wallet address from seed
-    useEffect(() => {
-        try {
-            if (!seed.trim()) {
-                setWalletAddr("");
-                return;
-            }
-            const w = xrpl.Wallet.fromSeed(seed.trim());
-            setWalletAddr(w.classicAddress);
-        } catch {
-            setWalletAddr("");
-        }
-    }, [seed]);
-
-    async function loadOffers() {
-        setLoading(true);
-        try {
-            const res = await fetch("/api/tickets/resale");
-            const data = await res.json();
-            setOffers(data.offers || []);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
->>>>>>> main
     }
   }, [seed]);
 
-<<<<<<< HEAD
   async function loadOffers() {
     setLoading(true);
     try {
@@ -79,53 +49,6 @@ export default function MarketplaceClient() {
       console.error(e);
     } finally {
       setLoading(false);
-=======
-    useEffect(() => {
-        loadOffers();
-    }, []);
-
-    async function handleBuy(offer: any) {
-        if (!walletAddr) return alert("Enter your seed first!");
-        setStatus(`Purchasing ticket for ${offer.priceXrp} XRP…`);
-
-        const client = new xrpl.Client(xrplWs);
-        try {
-            await client.connect();
-            const wallet = xrpl.Wallet.fromSeed(seed.trim());
-
-            let offerIndexToAccept = offer.offerIndex;
-
-            // If offerIndex is missing in DB, try to find it on-ledger as fallback
-            if (!offerIndexToAccept) {
-                const nftOffers = await client.request({
-                    command: "nft_sell_offers",
-                    nft_id: offer.nftId,
-                });
-                const actualOffer = (nftOffers.result.offers as any[]).find(o => o.owner === offer.seller);
-                if (!actualOffer) {
-                    setStatus("Could not find the sell offer on-ledger.");
-                    return;
-                }
-                offerIndexToAccept = actualOffer.nft_offer_index;
-            }
-
-            const acceptOffer: xrpl.NFTokenAcceptOffer = {
-                TransactionType: "NFTokenAcceptOffer",
-                Account: walletAddr,
-                NFTokenSellOffer: offerIndexToAccept,
-            };
-
-            const result = await client.submitAndWait(acceptOffer, { wallet });
-            const txHash = (result.result as any).hash;
-
-            setStatus(`✅ Purchase successful! Tx: ${txHash}`);
-            loadOffers(); // Refresh
-        } catch (e: any) {
-            setStatus(`Error: ${e.message}`);
-        } finally {
-            await client.disconnect();
-        }
->>>>>>> main
     }
   }
 
@@ -136,7 +59,7 @@ export default function MarketplaceClient() {
   async function handleBuy(offer: any) {
     if (!walletAddr) return alert("Enter your seed first!");
 
-    setBuying(true);
+    setBuyingId(offer.offerId);
     setStatus(`Purchasing ticket for ${offer.priceXrp} XRP…`);
 
     const client = new xrpl.Client(xrplWs);
@@ -144,35 +67,95 @@ export default function MarketplaceClient() {
       await client.connect();
       const wallet = xrpl.Wallet.fromSeed(seed.trim());
 
-      const nftOffers = await client.request({
-        command: "nft_sell_offers",
-        nft_id: offer.nftId,
-      });
+      // 1) Try the stored offerIndex first
+      let offerIndexToAccept =
+        offer.offerIndex && offer.offerIndex.trim()
+          ? offer.offerIndex.trim()
+          : null;
 
-      const actualOffer = (nftOffers.result.offers as any[]).find(
-        (o) => o.owner === offer.seller
-      );
-      if (!actualOffer) {
-        setStatus("Could not find the sell offer on-ledger.");
-        setBuying(false);
+      // 2) If no stored offerIndex, look up on-ledger
+      if (!offerIndexToAccept) {
+        setStatus("Looking up sell offer on-ledger…");
+        try {
+          const nftOffers = await client.request({
+            command: "nft_sell_offers",
+            nft_id: offer.nftId,
+          });
+
+          const allOffers = nftOffers.result.offers as any[];
+
+          // Find an offer from the seller that is NOT destination-locked
+          // (or is destined to us). Skip platform's destination-locked offers
+          // meant for someone else.
+          let actualOffer = allOffers.find(
+            (o) =>
+              o.owner === offer.seller &&
+              (!o.destination || o.destination === walletAddr)
+          );
+
+          // Fallback: any open offer (no destination) for this NFT
+          if (!actualOffer) {
+            actualOffer = allOffers.find(
+              (o) => !o.destination || o.destination === walletAddr
+            );
+          }
+
+          if (actualOffer) {
+            offerIndexToAccept = actualOffer.nft_offer_index;
+          }
+        } catch (e: any) {
+          const errCode = e?.data?.error;
+          if (errCode === "object_not_found") {
+            setStatus(
+              "No sell offers exist for this NFT on-ledger. The seller may not have listed it yet, or it was already purchased."
+            );
+            setBuyingId(null);
+            return;
+          }
+          console.warn(
+            "nft_sell_offers lookup failed:",
+            errCode || e?.message
+          );
+        }
+      }
+
+      if (!offerIndexToAccept) {
+        setStatus(
+          "Could not find a valid sell offer for your wallet. The offer may be locked to another buyer, or already accepted."
+        );
+        setBuyingId(null);
         return;
       }
 
-<<<<<<< HEAD
+      setStatus(
+        `Found offer (${offerIndexToAccept.slice(0, 8)}…). Accepting…`
+      );
+
       const acceptOffer: xrpl.NFTokenAcceptOffer = {
         TransactionType: "NFTokenAcceptOffer",
         Account: walletAddr,
-        NFTokenSellOffer: actualOffer.nft_offer_index,
+        NFTokenSellOffer: offerIndexToAccept,
       };
 
-      await client.submitAndWait(acceptOffer, { wallet });
-      setStatus("✅ Purchase successful! The NFT ticket is now in your wallet.");
+      const result = await client.submitAndWait(acceptOffer, { wallet });
+      const meta = (result.result as any).meta;
+
+      if (meta?.TransactionResult !== "tesSUCCESS") {
+        setStatus(`Transaction failed: ${meta?.TransactionResult}`);
+        setBuyingId(null);
+        return;
+      }
+
+      const txHash = (result.result as any).hash;
+      setStatus(`✅ Purchase successful! Tx: ${txHash}`);
       loadOffers();
     } catch (e: any) {
       setStatus(`Error: ${e.message}`);
     } finally {
-      setBuying(false);
-      await client.disconnect();
+      setBuyingId(null);
+      try {
+        await client.disconnect();
+      } catch {}
     }
   }
 
@@ -202,21 +185,6 @@ export default function MarketplaceClient() {
         <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
           <span className="spinner spinner-sm spinner-indigo" />
           Loading resale offers…
-=======
-            {status && (
-                <div style={{ padding: 12, background: "#222", borderRadius: 8, fontSize: 14 }}>
-                    {status.includes("Tx:") ? (
-                        <>
-                            {status.split("Tx:")[0]}
-                            <a href={explorerUrl("tx", status.split("Tx:")[1].trim())} target="_blank" rel="noopener noreferrer" style={{ color: "#27ae60" }}>
-                                View on Explorer ↗
-                            </a>
-                        </>
-                    ) : status}
-                </div>
-            )}
-
->>>>>>> main
         </div>
       )}
 
@@ -238,9 +206,10 @@ export default function MarketplaceClient() {
         {offers.map((o, i) => {
           const event = getEvent(o.eventId);
           const tier = getTier(o.eventId, o.tierId);
+          const isBuyingThis = buyingId === o.offerId;
           return (
             <div
-              key={i}
+              key={o.offerId || i}
               className="glass p-5 space-y-3 slide-up"
               style={{ animationDelay: `${i * 0.1}s` }}
             >
@@ -262,14 +231,15 @@ export default function MarketplaceClient() {
               <div className="pt-3 border-t border-black/5">
                 <button
                   onClick={() => handleBuy(o)}
-                  disabled={buying}
+                  disabled={buyingId !== null}
                   className="btn-primary w-full text-sm"
                   style={{
-                    background: "linear-gradient(135deg, #059669 0%, #34d399 100%)",
+                    background:
+                      "linear-gradient(135deg, #059669 0%, #34d399 100%)",
                     boxShadow: "0 2px 8px rgba(5,150,105,0.25)",
                   }}
                 >
-                  {buying ? (
+                  {isBuyingThis ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="spinner spinner-sm" />
                       Purchasing…

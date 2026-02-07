@@ -11,24 +11,43 @@ export async function GET(req: Request) {
         return NextResponse.json({ ok: false, error: "Missing params" }, { status: 400 });
     }
 
-    // Get all entries for this tier to show the "live queue"
     const entriesForTier = fenDb.queue.getAll()
         .filter((q: any) => q.eventId === eventId && q.tierId === tierId);
 
     const activeWaiters = entriesForTier.filter((q: any) => q.status === "committed");
 
-    const absIndex = entriesForTier.findIndex((q: any) => q.wallet === wallet);
-    const waitingIndex = activeWaiters.findIndex((q: any) => q.wallet === wallet);
+    // Get ALL entries for this wallet (multiple tickets)
+    const myEntries = entriesForTier.filter((q: any) => q.wallet === wallet);
 
-    const entry = absIndex !== -1 ? entriesForTier[absIndex] : null;
+    // Latest entry for backward compatibility
+    const latestEntry = myEntries.length > 0 ? myEntries[myEntries.length - 1] : null;
+
+    // Find the latest committed one (if any)
+    const latestCommitted = [...myEntries].reverse().find((q: any) => q.status === "committed");
+
+    // Overall status: if any are committed, show committed. If all claimed, show claimed.
+    let overallStatus = "not_found";
+    if (latestCommitted) {
+        overallStatus = "committed";
+    } else if (myEntries.length > 0) {
+        overallStatus = myEntries.every((q: any) => q.status === "claimed") ? "claimed" : myEntries[myEntries.length - 1].status;
+    }
+
+    const absIndex = latestCommitted
+        ? entriesForTier.findIndex((q: any) => q.id === latestCommitted.id)
+        : -1;
+    const waitingIndex = latestCommitted
+        ? activeWaiters.findIndex((q: any) => q.id === latestCommitted.id)
+        : -1;
 
     return NextResponse.json({
-        status: entry ? entry.status : "not_found",
+        status: overallStatus,
         absolutePosition: absIndex !== -1 ? absIndex + 1 : -1,
         waitingPosition: waitingIndex !== -1 ? waitingIndex + 1 : -1,
         total: entriesForTier.length,
         totalWaiting: activeWaiters.length,
-        entry,
+        entry: latestCommitted || latestEntry,
+        myEntries,
         queueList: entriesForTier.map((q: any) => ({
             wallet: q.wallet,
             commitTxHash: q.commitTxHash,

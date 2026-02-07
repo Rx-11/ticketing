@@ -19,7 +19,6 @@ export async function POST(req: Request) {
         const json = await req.json();
         const body = Body.parse(json);
 
-        // Backend Price Ceiling Validation
         const tier = getTier(body.eventId, body.tierId);
         const maxPrice = maxResalePriceXrp(tier.priceXrp, tier.resaleCapBps);
 
@@ -32,7 +31,11 @@ export async function POST(req: Request) {
 
         fenDb.offers.push(body);
 
-        return NextResponse.json({ ok: true });
+        // Decrease trust score on resale (-5)
+        const newScore = fenDb.scores.increment(body.seller, -5);
+        console.log(`[Score] ${body.seller} score decreased to ${newScore} (resale)`);
+
+        return NextResponse.json({ ok: true, newScore });
     } catch (error: any) {
         return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
     }

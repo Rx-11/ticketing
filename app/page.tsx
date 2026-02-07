@@ -68,7 +68,7 @@ export default function LandingPage() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Fen Ticket</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">NFTickets Pass</p>
                         <p className="text-sm font-bold text-[var(--text-primary)]">#4827</p>
                       </div>
                     </div>
@@ -86,7 +86,7 @@ export default function LandingPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold">Venue</p>
-                        <p className="text-sm font-semibold text-[var(--text-primary)]">Fen Arena</p>
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">NFTickets Arena</p>
                       </div>
                       <div>
                         <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold">Tier</p>
@@ -160,7 +160,7 @@ export default function LandingPage() {
       <section id="how-it-works" className="px-6 py-24 max-w-6xl mx-auto scroll-mt-20">
         <div className="text-center mb-16 slide-up">
           <span className="badge badge-indigo mb-4">The Solution</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight mb-4">How Fen works</h2>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight mb-4">How NFTickets works</h2>
           <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">A three-phase commit-reveal protocol built on the XRP Ledger that ensures every ticket sale is fair, transparent, and bot-resistant.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-0">
@@ -291,7 +291,7 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                 </svg>
               </div>
-              <span className="font-semibold text-[var(--text-secondary)]">fen</span>
+              <span className="font-semibold text-[var(--text-secondary)]">NFTickets</span>
               <span className="text-[var(--text-muted)]">• Built at TartanHacks 2026</span>
             </div>
             <div className="flex items-center gap-4">

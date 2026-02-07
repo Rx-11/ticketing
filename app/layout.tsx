@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fen — Fair On-Chain Ticketing",
+  title: "NFTickets — Fair On-Chain Ticketing",
   description:
     "XRPL-powered event ticketing with commit-reveal queues, fair pricing, and transparent splits.",
 };

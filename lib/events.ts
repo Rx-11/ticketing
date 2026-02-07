@@ -35,8 +35,8 @@ export type EventConfig = {
 export const EVENTS: EventConfig[] = [
   {
     eventId: "EVT-ROCK-001",
-    name: "Fen Live: Stadium Rock Night",
-    venueName: "Fen Arena",
+    name: "NFTickets Live: Stadium Rock Night",
+    venueName: "NFTickets Arena",
     startTimeISO: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
     currency: "XRP",
     tiers: [
@@ -62,7 +62,7 @@ export const EVENTS: EventConfig[] = [
   },
   {
     eventId: "EVT-EDM-002",
-    name: "Fen Rave: Neon Pulse",
+    name: "NFTickets Rave: Neon Pulse",
     venueName: "Warehouse District",
     startTimeISO: new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString(),
     currency: "XRP",

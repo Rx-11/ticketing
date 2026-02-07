@@ -1,5 +1,6 @@
 // app/api/score/route.ts
 import { NextResponse } from "next/server";
+import { fenDb } from "@/lib/db";
 
 function mockScore(wallet: string): number {
   // MVP: hardcode 2 wallets by suffix/pattern or just return 0 if unknown.
@@ -16,7 +17,11 @@ function mockScore(wallet: string): number {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const wallet = searchParams.get("wallet") || "";
-  const score = mockScore(wallet);
 
+  if (!wallet.trim()) {
+    return NextResponse.json({ wallet: "", score: 0 });
+  }
+
+  const score = fenDb.scores.get(wallet.trim());
   return NextResponse.json({ wallet, score });
 }

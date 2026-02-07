@@ -9,11 +9,11 @@ import * as xrpl from "xrpl";
 export default function EventClient({ eventId }: { eventId: string }) {
   const [seed, setSeed] = useState("");
   const [walletAddr, setWalletAddr] = useState("");
+  const [quantity, setQuantity] = useState(1);
 
   const explorerUrl = (type: "tx" | "nft" | "address", id: string) =>
     `https://testnet.xrpl.org/${type === "tx" ? "transactions" : type}/${id}`;
 
-  // Persist seed
   useEffect(() => {
     const savedSeed = localStorage.getItem("fen_wallet_seed");
     if (savedSeed) setSeed(savedSeed);
@@ -33,13 +33,13 @@ export default function EventClient({ eventId }: { eventId: string }) {
 
   const [committing, setCommitting] = useState(false);
   const [revealing, setRevealing] = useState(false);
+  const [accepting, setAccepting] = useState(false);
 
   const xrplWs = process.env.NEXT_PUBLIC_XRPL_WS!;
   const platformAddr = process.env.NEXT_PUBLIC_PLATFORM_RECEIVE_ADDRESS!;
 
   const tierId = "GA";
 
-  // Derive wallet address from seed
   useEffect(() => {
     try {
       if (!seed.trim()) {
@@ -53,27 +53,25 @@ export default function EventClient({ eventId }: { eventId: string }) {
     }
   }, [seed]);
 
-  // Load score
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      if (!walletAddr) {
-        setScore(null);
-        return;
-      }
-      setLoadingScore(true);
-      try {
-        const res = await fetch(`/api/score?wallet=${encodeURIComponent(walletAddr)}`);
-        const data = await res.json();
-        if (!cancelled) setScore(data.score ?? 0);
-      } finally {
-        if (!cancelled) setLoadingScore(false);
-      }
+  async function loadScore() {
+    if (!walletAddr) {
+      setScore(null);
+      return;
     }
-    load();
-    return () => {
-      cancelled = true;
-    };
+    setLoadingScore(true);
+    try {
+      const res = await fetch(
+        `/api/score?wallet=${encodeURIComponent(walletAddr)}`
+      );
+      const data = await res.json();
+      setScore(data.score ?? 0);
+    } finally {
+      setLoadingScore(false);
+    }
+  }
+
+  useEffect(() => {
+    loadScore();
   }, [walletAddr]);
 
   const stakeXrp = useMemo(
@@ -81,78 +79,87 @@ export default function EventClient({ eventId }: { eventId: string }) {
     [score]
   );
 
+  const totalStake = useMemo(
+    () => (stakeXrp ? (Number(stakeXrp) * quantity).toFixed(2).replace(/\.?0+$/, "") : null),
+    [stakeXrp, quantity]
+  );
+
   async function doCommit() {
     if (!seed.trim()) return setStatus("Enter a seed (testnet) to commit.");
     if (!walletAddr) return setStatus("Invalid seed.");
-    if (!stakeXrp) return setStatus("Score not loaded yet.");
+    if (!stakeXrp || !totalStake) return setStatus("Score not loaded yet.");
     if (!platformAddr?.startsWith("r"))
       return setStatus("Set NEXT_PUBLIC_PLATFORM_RECEIVE_ADDRESS.");
 
     setCommitting(true);
-    setStatus("Preparing commit…");
-
-    const sec = randomHex(16);
-    const non = randomHex(16);
-    const commitInput = `${eventId}|${tierId}|${walletAddr}|${sec}|${non}`;
-    const cHash = await sha256Hex(commitInput);
-
-    setSecret(sec);
-    setNonce(non);
-    setCommitHash(cHash);
 
     const client = new xrpl.Client(xrplWs);
     try {
       await client.connect();
       const wallet = xrpl.Wallet.fromSeed(seed.trim());
 
-      const memo = makeCommitMemo(eventId, tierId, cHash);
+      for (let i = 0; i < quantity; i++) {
+        setStatus(`Preparing commit ${i + 1} of ${quantity}…`);
 
-      const tx: xrpl.Payment = {
-        TransactionType: "Payment",
-        Account: wallet.classicAddress,
-        Destination: platformAddr,
-        Amount: xrpl.xrpToDrops(stakeXrp),
-        Memos: [memo],
-      };
+        const sec = randomHex(16);
+        const non = randomHex(16);
+        const commitInput = `${eventId}|${tierId}|${walletAddr}|${sec}|${non}`;
+        const cHash = await sha256Hex(commitInput);
 
-      setStatus("Submitting stake payment to XRPL…");
+        const memo = makeCommitMemo(eventId, tierId, cHash);
 
-      const result = await client.submitAndWait(tx, { wallet });
+        const tx: xrpl.Payment = {
+          TransactionType: "Payment",
+          Account: wallet.classicAddress,
+          Destination: platformAddr,
+          Amount: xrpl.xrpToDrops(stakeXrp),
+          Memos: [memo],
+        };
 
-      const txHash =
-        (result.result as any)?.hash ||
-        (result.result as any)?.tx_json?.hash;
+        setStatus(`Submitting stake ${i + 1}/${quantity} to XRPL…`);
+        const result = await client.submitAndWait(tx, { wallet });
 
-      if (!txHash) {
-        console.error(result);
-        setStatus("Submitted, but couldn't read tx hash. Check console.");
-        setCommitting(false);
-        return;
+        const txHash =
+          (result.result as any)?.hash ||
+          (result.result as any)?.tx_json?.hash;
+
+        if (!txHash) {
+          setStatus(`Ticket ${i + 1}: couldn't read tx hash.`);
+          continue;
+        }
+
+        // Save to backend
+        const saveRes = await fetch("/api/queue/commit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventId,
+            tierId,
+            wallet: walletAddr,
+            stakeXrp,
+            commitHash: cHash,
+            commitTxHash: txHash,
+            ticketIndex: i,
+          }),
+        });
+
+        if (!saveRes.ok) {
+          const err = await saveRes.json();
+          setStatus(`Ticket ${i + 1} save failed: ${err.error}`);
+          continue;
+        }
+
+        // Save secret/nonce for this specific commit
+        const key = `fen_commit_${eventId}_${tierId}_${walletAddr}_${cHash}`;
+        localStorage.setItem(key, JSON.stringify({ secret: sec, nonce: non, hash: cHash }));
+
+        // Keep the latest for reveal
+        setSecret(sec);
+        setNonce(non);
+        setCommitHash(cHash);
       }
 
-      setStatus(`On-ledger commit tx confirmed. Saving…`);
-
-      const saveRes = await fetch("/api/queue/commit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventId,
-          tierId,
-          wallet: walletAddr,
-          stakeXrp,
-          commitHash: cHash,
-          commitTxHash: txHash,
-        }),
-      });
-
-      const saveJson = await saveRes.json();
-      if (!saveRes.ok) {
-        setStatus(`Commit save failed: ${saveJson.error || "unknown error"}`);
-        setCommitting(false);
-        return;
-      }
-
-      setStatus("✅ Commit complete — stake paid, memo on-chain, stored.");
+      setStatus(`✅ ${quantity} ticket(s) committed — stakes paid, on-chain.`);
     } catch (e: any) {
       console.error(e);
       setStatus(`Commit failed: ${e?.message || String(e)}`);
@@ -171,7 +178,7 @@ export default function EventClient({ eventId }: { eventId: string }) {
       setQueueStatus(null);
       return;
     }
-    const timer = setInterval(async () => {
+    const poll = async () => {
       try {
         const res = await fetch(
           `/api/queue/status?eventId=${eventId}&tierId=${tierId}&wallet=${walletAddr}`
@@ -179,31 +186,25 @@ export default function EventClient({ eventId }: { eventId: string }) {
         const data = await res.json();
         setQueueStatus(data);
 
-        const key = `fen_commit_${eventId}_${tierId}_${walletAddr}`;
-        const saved = localStorage.getItem(key);
-        if (saved) {
-          const { secret: s, nonce: n, hash: h } = JSON.parse(saved);
-          setSecret(s);
-          setNonce(n);
-          setCommitHash(h);
+        // Restore latest committed entry's secret/nonce
+        if (data.entry && data.status === "committed") {
+          const key = `fen_commit_${eventId}_${tierId}_${walletAddr}_${data.entry.commitHash}`;
+          const saved = localStorage.getItem(key);
+          if (saved) {
+            const { secret: s, nonce: n, hash: h } = JSON.parse(saved);
+            setSecret(s);
+            setNonce(n);
+            setCommitHash(h);
+          }
         }
       } catch (e) {
         console.error("Queue poll error", e);
       }
-    }, 3000);
+    };
+    poll();
+    const timer = setInterval(poll, 3000);
     return () => clearInterval(timer);
   }, [walletAddr, eventId, tierId]);
-
-  // Save secret/nonce to localStorage
-  useEffect(() => {
-    if (commitHash && secret && nonce && walletAddr) {
-      const key = `fen_commit_${eventId}_${tierId}_${walletAddr}`;
-      localStorage.setItem(
-        key,
-        JSON.stringify({ secret, nonce, hash: commitHash })
-      );
-    }
-  }, [commitHash, secret, nonce, walletAddr, eventId, tierId]);
 
   async function doReveal() {
     if (!secret || !nonce)
@@ -230,8 +231,10 @@ export default function EventClient({ eventId }: { eventId: string }) {
         setRevealing(false);
         return;
       }
+      // Refresh score after purchase
+      loadScore();
       setStatus(
-        "✅ Success! Your stake has been refunded and your NFT ticket is being minted."
+        "✅ Reveal success! Now accept the sell offer to receive your NFT ticket."
       );
     } catch (e: any) {
       setStatus(`Reveal error: ${e.message}`);
@@ -240,7 +243,76 @@ export default function EventClient({ eventId }: { eventId: string }) {
     }
   }
 
-  const isProcessing = committing || revealing;
+  async function doAcceptOffer() {
+    if (!seed.trim() || !walletAddr) return setStatus("Enter your seed.");
+    if (!queueStatus?.entry?.nftId) return setStatus("NFT ID not found.");
+
+    setAccepting(true);
+    setStatus("Looking for your sell offer on-ledger…");
+
+    const client = new xrpl.Client(xrplWs);
+    try {
+      await client.connect();
+      const wallet = xrpl.Wallet.fromSeed(seed.trim());
+
+      const nftOffers = await client.request({
+        command: "nft_sell_offers",
+        nft_id: queueStatus.entry.nftId,
+      });
+
+      const myOffer = (nftOffers.result.offers as any[]).find(
+        (o) =>
+          o.destination === walletAddr || o.owner === platformAddr
+      );
+
+      if (!myOffer) {
+        setStatus(
+          "Could not find the sell offer on-ledger. Try again in a few seconds."
+        );
+        setAccepting(false);
+        return;
+      }
+
+      setStatus(
+        `Found offer for ${xrpl.dropsToXrp(myOffer.amount)} XRP. Accepting…`
+      );
+
+      const acceptTx: xrpl.NFTokenAcceptOffer = {
+        TransactionType: "NFTokenAcceptOffer",
+        Account: walletAddr,
+        NFTokenSellOffer: myOffer.nft_offer_index,
+      };
+
+      const result = await client.submitAndWait(acceptTx, { wallet });
+      const meta = (result.result as any).meta;
+
+      if (meta?.TransactionResult !== "tesSUCCESS") {
+        setStatus(`Accept failed: ${meta?.TransactionResult}`);
+        setAccepting(false);
+        return;
+      }
+
+      setStatus("✅ NFT ticket is now in your wallet!");
+    } catch (e: any) {
+      if (e?.data?.error === "object_not_found") {
+        setStatus("No sell offers found yet — try again in a few seconds.");
+      } else {
+        setStatus(`Accept error: ${e?.message || String(e)}`);
+      }
+    } finally {
+      setAccepting(false);
+      try {
+        await client.disconnect();
+      } catch {}
+    }
+  }
+
+  const isProcessing = committing || revealing || accepting;
+
+  // Count how many are committed vs claimed
+  const committedCount = queueStatus?.myEntries?.filter((e: any) => e.status === "committed").length ?? 0;
+  const claimedCount = queueStatus?.myEntries?.filter((e: any) => e.status === "claimed").length ?? 0;
+  const totalTickets = queueStatus?.myEntries?.length ?? 0;
 
   return (
     <div className="space-y-5">
@@ -263,65 +335,9 @@ export default function EventClient({ eventId }: { eventId: string }) {
           />
         </div>
 
-<<<<<<< HEAD
         {walletAddr && (
           <div className="text-xs font-mono text-[var(--text-muted)] break-all">
             Wallet: {walletAddr}
-=======
-        <div>
-          {loadingScore && <div>Loading score…</div>}
-          {!loadingScore && score !== null && (
-            <div style={{ padding: 12, border: "1px solid #333", borderRadius: 8, background: "#0a0a0a" }}>
-              <div><b>FenScore:</b> {score}</div>
-              <div><b>Required stake:</b> {stakeXrp} XRP</div>
-            </div>
-          )}
-        </div>
-
-        {walletAddr && (!queueStatus || queueStatus.status === "not_found") && (
-          <>
-            <h2>2. Stake & Queue</h2>
-            <button onClick={doCommit} style={{ padding: "10px 12px", width: "100%", background: "#0070f3", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}>
-              Commit (stake {stakeXrp} XRP)
-            </button>
-          </>
-        )}
-
-        {queueStatus && queueStatus.status === "committed" && (
-          <div style={{ padding: 12, border: "1px solid #0070f3", borderRadius: 8, background: "rgba(0, 112, 243, 0.1)" }}>
-            <h2>2. Queue Status</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
-              <div style={{ padding: 10, border: "1px solid #333", borderRadius: 6, background: "#111" }}>
-                <div style={{ fontSize: 11, opacity: 0.6 }}>Current Queue Position</div>
-                <div style={{ fontSize: 20, fontWeight: "bold" }}>#{queueStatus.absolutePosition}</div>
-              </div>
-              <div style={{ padding: 10, border: "1px solid #0070f3", borderRadius: 6, background: "rgba(0, 112, 243, 0.1)" }}>
-                <div style={{ fontSize: 11, color: "#0070f3" }}>Actual Position (Waiting)</div>
-                <div style={{ fontSize: 20, fontWeight: "bold", color: "#0070f3" }}>#{queueStatus.waitingPosition}</div>
-              </div>
-            </div>
-
-            <div style={{ opacity: 0.8, marginTop: 8 }}>
-              You have staked {queueStatus.entry.stakeXrp} XRP. Your commitment is on-ledger.
-              {queueStatus.entry.commitTxHash && (
-                <div style={{ marginTop: 4 }}>
-                  <a href={explorerUrl("tx", queueStatus.entry.commitTxHash)} target="_blank" rel="noopener noreferrer" style={{ color: "#0070f3", fontSize: 12 }}>
-                    View Commit Tx on Explorer ↗
-                  </a>
-                </div>
-              )}
-            </div>
-
-            <h2 style={{ marginTop: 24 }}>3. Buy Ticket (Reveal)</h2>
-            <p style={{ fontSize: 13, opacity: 0.7 }}>
-              Ready to buy? This will reveal your secret, refund your {queueStatus.entry.stakeXrp} XRP stake, and mint your NFT ticket.
-              <b> You will then need to accept the NFT offer to pay the ticket price.</b>
-            </p>
-
-            <button onClick={doReveal} style={{ padding: "10px 12px", width: "100%", background: "#27ae60", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}>
-              Reveal & Buy Ticket
-            </button>
->>>>>>> main
           </div>
         )}
 
@@ -335,71 +351,54 @@ export default function EventClient({ eventId }: { eventId: string }) {
         {!loadingScore && score !== null && (
           <div className="flex gap-3">
             <div className="stat-pill flex-1">
-              <span className="label">FenScore</span>
+              <span className="label">Trust Score</span>
               <span className="value">{score}</span>
             </div>
-<<<<<<< HEAD
             <div className="stat-pill flex-1">
-              <span className="label">Required Stake</span>
+              <span className="label">Stake / Ticket</span>
               <span className="value">{stakeXrp} XRP</span>
-=======
-          </div>
-        )}
-
-
-        {status && (
-          <div style={{ marginTop: 12, padding: 10, background: "#222", borderRadius: 4, fontSize: 14 }}>
-            {status}
-          </div>
-        )}
-
-        {queueStatus && queueStatus.queueList && (
-          <div style={{ marginTop: 24, padding: 16, border: "1px solid #333", borderRadius: 8, background: "#050505" }}>
-            <h2 style={{ marginTop: 0 }}>4. Live Queue (On-Ledger)</h2>
-            <div style={{ display: "grid", gap: 10 }}>
-              {queueStatus.queueList.map((q: any, i: number) => {
-                const isMe = q.wallet === walletAddr;
-                return (
-                  <div key={i} style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "8px 12px",
-                    background: isMe ? "rgba(0, 112, 243, 0.1)" : "#111",
-                    border: isMe ? "1px solid #0070f3" : "1px solid #222",
-                    borderRadius: 6
-                  }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: "bold" }}>
-                        #{i + 1} {q.wallet.slice(0, 8)}...{q.wallet.slice(-4)} {isMe && "(You)"}
-                      </div>
-                      <div style={{ fontSize: 11, opacity: 0.6 }}>
-                        Staked at {new Date(q.createdAt).toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <a
-                      href={explorerUrl("tx", q.commitTxHash)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: 11, color: "#0070f3", textDecoration: "none" }}
-                    >
-                      Verify Tx ↗
-                    </a>
-                  </div>
-                );
-              })}
->>>>>>> main
             </div>
           </div>
         )}
       </div>
 
       {/* ── Step 2: Commit / Queue ────────────── */}
-      {walletAddr && (!queueStatus || queueStatus.status === "not_found") && (
+      {walletAddr && (!queueStatus || queueStatus.status === "not_found" || claimedCount === totalTickets) && (
         <div className="glass p-5 space-y-4 slide-up">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">
             2 · Stake &amp; Queue
           </h3>
+
+          {/* Quantity selector */}
+          <div>
+            <label className="text-xs font-medium text-[var(--text-secondary)] mb-1.5 block">
+              Number of tickets
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={isProcessing || quantity <= 1}
+                className="btn-glass w-10 h-10 flex items-center justify-center text-lg font-bold"
+              >
+                −
+              </button>
+              <span className="text-xl font-bold text-[var(--text-primary)] w-8 text-center">
+                {quantity}
+              </span>
+              <button
+                onClick={() => setQuantity(Math.min(5, quantity + 1))}
+                disabled={isProcessing || quantity >= 5}
+                className="btn-glass w-10 h-10 flex items-center justify-center text-lg font-bold"
+              >
+                +
+              </button>
+              {quantity > 1 && totalStake && (
+                <span className="text-xs text-[var(--text-muted)] ml-2">
+                  Total stake: {totalStake} XRP
+                </span>
+              )}
+            </div>
+          </div>
 
           {committing ? (
             <div className="processing-overlay">
@@ -419,30 +418,39 @@ export default function EventClient({ eventId }: { eventId: string }) {
               disabled={isProcessing}
               className="btn-primary w-full"
             >
-              Commit — Stake {stakeXrp} XRP
+              Commit {quantity} ticket{quantity > 1 ? "s" : ""} — Stake {totalStake} XRP
             </button>
           )}
         </div>
       )}
 
-      {/* ── Committed state: queue position ───── */}
-      {queueStatus && queueStatus.status === "committed" && (
-        <div className="glass p-5 space-y-4 slide-up" style={{ borderColor: "rgba(99,102,241,0.25)" }}>
+      {/* ── Committed state: queue position + reveal ── */}
+      {queueStatus && queueStatus.status === "committed" && committedCount > 0 && (
+        <div
+          className="glass p-5 space-y-4 slide-up"
+          style={{ borderColor: "rgba(99,102,241,0.25)" }}
+        >
           <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">
             2 · Queue Status
           </h3>
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-[var(--text-primary)]">
-              #{queueStatus.position}
-            </span>
-            <span className="text-sm text-[var(--text-muted)]">
-              / {queueStatus.total} in queue
-            </span>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="stat-pill">
+              <span className="label">Position</span>
+              <span className="value">#{queueStatus.absolutePosition}</span>
+            </div>
+            <div className="stat-pill" style={{ borderColor: "rgba(99,102,241,0.2)" }}>
+              <span className="label" style={{ color: "#6366f1" }}>Waiting</span>
+              <span className="value" style={{ color: "#6366f1" }}>#{queueStatus.waitingPosition}</span>
+            </div>
+            <div className="stat-pill">
+              <span className="label">Committed</span>
+              <span className="value">{committedCount} ticket{committedCount > 1 ? "s" : ""}</span>
+            </div>
           </div>
 
           <p className="text-xs text-[var(--text-secondary)]">
-            Staked {queueStatus.entry.stakeXrp} XRP — commitment is on-ledger.
+            Staked {queueStatus.entry.stakeXrp} XRP per ticket — commitments are on-ledger.
           </p>
 
           {queueStatus.entry.commitTxHash && (
@@ -452,19 +460,17 @@ export default function EventClient({ eventId }: { eventId: string }) {
               rel="noopener noreferrer"
               className="text-xs font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
             >
-              View Commit Tx on Explorer ↗
+              View Latest Commit Tx ↗
             </a>
           )}
 
-          {/* Reveal / Buy */}
           <div className="pt-4 border-t border-black/5 space-y-3">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">
               3 · Buy Ticket (Reveal)
             </h3>
             <p className="text-xs text-[var(--text-secondary)]">
-              This will reveal your secret, refund your{" "}
-              {queueStatus.entry.stakeXrp} XRP stake, and mint your NFT ticket.
-              <strong> You'll then need to accept the NFT offer to pay the ticket price.</strong>
+              Reveals one ticket at a time. Refunds stake and mints your NFT.
+              <strong> You&apos;ll then accept the offer to pay.</strong>
             </p>
 
             {revealing ? (
@@ -474,9 +480,7 @@ export default function EventClient({ eventId }: { eventId: string }) {
                   <p className="text-sm font-semibold text-[var(--text-primary)]">
                     Minting your NFT ticket…
                   </p>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">
-                    {status}
-                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{status}</p>
                 </div>
               </div>
             ) : (
@@ -489,15 +493,15 @@ export default function EventClient({ eventId }: { eventId: string }) {
                   boxShadow: "0 2px 8px rgba(5,150,105,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >
-                Reveal &amp; Buy Ticket
+                Reveal &amp; Buy 1 Ticket
               </button>
             )}
           </div>
         </div>
       )}
 
-      {/* ── Claimed state: success ────────────── */}
-      {queueStatus && queueStatus.status === "claimed" && (
+      {/* ── Claimed state: accept offer ─── */}
+      {queueStatus && claimedCount > 0 && queueStatus.entry?.nftId && (
         <div
           className="glass p-5 space-y-4 slide-up"
           style={{ borderColor: "rgba(52,211,153,0.3)" }}
@@ -505,24 +509,46 @@ export default function EventClient({ eventId }: { eventId: string }) {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🎉</span>
             <h3 className="text-lg font-bold text-[var(--text-primary)]">
-              Ticket Secured!
+              {claimedCount} Ticket{claimedCount > 1 ? "s" : ""} Secured!
             </h3>
           </div>
           <p className="text-sm text-[var(--text-secondary)]">
-            Your stake has been refunded. Your NFT ticket is minted and a sell
-            offer has been created for you.
+            Your stake has been refunded and your NFT ticket has been minted.
+            Accept the sell offer to transfer the NFT to your wallet.
           </p>
+
+          <div className="pt-3 border-t border-black/5 space-y-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              4 · Accept NFT Offer &amp; Pay
+            </h3>
+
+            {accepting ? (
+              <div className="processing-overlay">
+                <span className="spinner" style={{ width: 40, height: 40, borderWidth: 3 }} />
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    Accepting offer on XRPL…
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{status}</p>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={doAcceptOffer}
+                disabled={isProcessing}
+                className="btn-primary w-full"
+                style={{ background: "linear-gradient(135deg, #6366f1 0%, #818cf8 100%)" }}
+              >
+                Accept Offer &amp; Pay Ticket Price
+              </button>
+            )}
+          </div>
 
           <div className="space-y-2 text-xs text-[var(--text-muted)] break-all">
             {queueStatus.entry.revealTxHash && (
               <div>
                 <span className="font-semibold text-[var(--text-secondary)]">Refund Tx: </span>
-                <a
-                  href={explorerUrl("tx", queueStatus.entry.revealTxHash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-600 hover:text-emerald-700 transition-colors"
-                >
+                <a href={explorerUrl("tx", queueStatus.entry.revealTxHash)} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 transition-colors">
                   {queueStatus.entry.revealTxHash}
                 </a>
               </div>
@@ -530,26 +556,8 @@ export default function EventClient({ eventId }: { eventId: string }) {
             {queueStatus.entry.nftId && (
               <div>
                 <span className="font-semibold text-[var(--text-secondary)]">NFT ID: </span>
-                <a
-                  href={explorerUrl("nft", queueStatus.entry.nftId)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-600 hover:text-emerald-700 transition-colors"
-                >
+                <a href={explorerUrl("nft", queueStatus.entry.nftId)} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 transition-colors">
                   {queueStatus.entry.nftId}
-                </a>
-              </div>
-            )}
-            {queueStatus.entry.offerTxHash && (
-              <div>
-                <span className="font-semibold text-[var(--text-secondary)]">Offer Tx: </span>
-                <a
-                  href={explorerUrl("tx", queueStatus.entry.offerTxHash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-600 hover:text-emerald-700 transition-colors"
-                >
-                  {queueStatus.entry.offerTxHash}
                 </a>
               </div>
             )}
@@ -557,21 +565,65 @@ export default function EventClient({ eventId }: { eventId: string }) {
         </div>
       )}
 
-      {/* ── Status message ────────────────────── */}
-      {status && !isProcessing && (
-        <div className="glass p-3 text-sm text-[var(--text-secondary)]">
-          {status}
+      {/* ── Live Queue ────────────────────────── */}
+      {queueStatus && queueStatus.queueList && queueStatus.queueList.length > 0 && (
+        <div className="glass p-5 space-y-4 slide-up">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+            Live Queue (On-Ledger)
+          </h3>
+          <div className="space-y-2">
+            {queueStatus.queueList.map((q: any, i: number) => {
+              const isMe = q.wallet === walletAddr;
+              return (
+                <div
+                  key={i}
+                  className={`flex items-center justify-between p-3 rounded-xl text-sm ${
+                    isMe
+                      ? "bg-[var(--accent-primary-soft)] border border-indigo-300/30"
+                      : "bg-black/[0.02] border border-black/[0.03]"
+                  }`}
+                >
+                  <div>
+                    <span className="font-bold text-[var(--text-primary)]">#{i + 1}</span>{" "}
+                    <span className="font-mono text-xs text-[var(--text-muted)]">
+                      {q.wallet.slice(0, 8)}…{q.wallet.slice(-4)}
+                    </span>
+                    {isMe && <span className="badge badge-indigo text-[9px] ml-2">You</span>}
+                    <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
+                      {new Date(q.createdAt).toLocaleTimeString()}
+                      {q.status !== "committed" && (
+                        <span className="badge badge-mint text-[9px] ml-2">{q.status}</span>
+                      )}
+                    </div>
+                  </div>
+                  <a
+                    href={explorerUrl("tx", q.commitTxHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
+                  >
+                    Verify ↗
+                  </a>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* ── Debug: commit hash ────────────────── */}
+      {/* Status */}
+      {status && !isProcessing && (
+        <div className="glass p-3 text-sm text-[var(--text-secondary)]">{status}</div>
+      )}
+
+      {/* Debug */}
       {commitHash && queueStatus?.status !== "claimed" && !isProcessing && (
         <div className="p-3 border border-dashed border-black/10 rounded-lg">
           <div className="text-xs text-[var(--text-muted)] break-all">
             <span className="font-semibold">CommitHash:</span> {commitHash}
           </div>
           <div className="text-[10px] text-[var(--text-muted)] opacity-60 mt-1">
-            Secret: {secret} · Nonce: {nonce} (stored in localStorage)
+            Secret: {secret} · Nonce: {nonce}
           </div>
         </div>
       )}

@@ -18,24 +18,26 @@ export async function POST(req: Request) {
         const json = await req.json();
         const body = Body.parse(json);
 
-        // 0) Get price
         const tier = getTier(body.eventId, body.tierId);
         const priceXrp = tier.priceXrp;
 
-        // 1) Find the commitment
-        const entry = fenDb.queue.find(
-            (q) =>
+        // Find the OLDEST committed entry for this wallet+event+tier
+        const allCommitted = fenDb.queue.filter(
+            (q: any) =>
                 q.eventId === body.eventId &&
                 q.tierId === body.tierId &&
                 q.wallet === body.wallet &&
                 q.status === "committed"
         );
 
-        if (!entry) {
+        if (!allCommitted || allCommitted.length === 0) {
             return NextResponse.json({ ok: false, error: "Commitment not found or already revealed" }, { status: 404 });
         }
 
-        // 2) Verify the hash
+        // Take the oldest one
+        const entry = allCommitted[0] as any;
+
+        // Verify the hash
         const input = `${body.eventId}|${body.tierId}|${body.wallet}|${body.secret}|${body.nonce}`;
         const calculatedHash = await sha256Hex(input);
 
@@ -43,7 +45,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: "Invalid secret or nonce" }, { status: 400 });
         }
 
-        // 3) Process Reveal, Refund and Mint
+        // Process
         console.log(`[Reveal] Refunding ${entry.stakeXrp} XRP to ${body.wallet}...`);
         const refundResult = await refundStake(body.wallet, entry.stakeXrp);
 
@@ -53,7 +55,7 @@ export async function POST(req: Request) {
         console.log(`[Reveal] Creating ${priceXrp} XRP sell offer for NFT ${mintResult.nftID} to ${body.wallet}...`);
         const offerResult = await createNftSellOffer(body.wallet, mintResult.nftID, priceXrp);
 
-        // 4) Update DB
+        // Update DB by ID (not wallet, so we don't overwrite other tickets)
         const updates = {
             status: "claimed",
             revealSecret: body.secret,
@@ -62,17 +64,20 @@ export async function POST(req: Request) {
             nftId: mintResult.nftID,
             offerTxHash: offerResult.hash
         };
-        fenDb.queue.update(body.wallet, updates);
+        fenDb.queue.updateById(entry.id, updates);
+
+        // Increase trust score on successful ticket purchase
+        const newScore = fenDb.scores.increment(body.wallet, 10);
+        console.log(`[Score] ${body.wallet} score increased to ${newScore}`);
 
         return NextResponse.json({
             ok: true,
             refundTxHash: updates.revealTxHash,
             mintTxHash: mintResult.hash,
             nftId: updates.nftId,
-            offerTxHash: updates.offerTxHash
+            offerTxHash: updates.offerTxHash,
+            newScore,
         });
-
-
 
     } catch (error: any) {
         console.error("[Reveal Error]", error);

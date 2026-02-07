@@ -8,21 +8,23 @@ const Body = z.object({
   wallet: z.string().min(5),
   stakeXrp: z.string().min(1),
   commitHash: z.string().min(10),
-  commitTxHash: z.string().min(10), // real tx hash
+  commitTxHash: z.string().min(10),
+  ticketIndex: z.number().int().min(0).default(0),
 });
 
 export async function POST(req: Request) {
   const json = await req.json();
   const body = Body.parse(json);
 
-  const existing = fenDb.queue.find(
-    (q) => q.eventId === body.eventId && q.tierId === body.tierId && q.wallet === body.wallet
+  // Check for duplicate commitHash (same exact commit), not duplicate wallet
+  const duplicate = fenDb.queue.find(
+    (q) => q.commitHash === body.commitHash
   );
-  if (existing) {
-    return NextResponse.json({ ok: false, error: "Already committed for this event/tier" }, { status: 400 });
+  if (duplicate) {
+    return NextResponse.json({ ok: false, error: "Duplicate commit hash" }, { status: 400 });
   }
 
-  fenDb.queue.push({
+  const id = fenDb.queue.push({
     eventId: body.eventId,
     tierId: body.tierId,
     wallet: body.wallet,
@@ -33,5 +35,5 @@ export async function POST(req: Request) {
     status: "committed",
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, id });
 }
