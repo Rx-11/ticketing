@@ -40,7 +40,7 @@ export const EVENTS: EventConfig[] = [
     startTimeISO: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
     currency: "XRP",
     tiers: [
-      { tierId: "GA", name: "General Admission", priceXrp: "50", supply: 2, resaleCapBps: 1000 },
+      { tierId: "GA", name: "General Admission", priceXrp: "1", supply: 2, resaleCapBps: 1000 },
     ],
     primarySplits: [
       { name: "artist", address: "rARTIST_REPLACE_ME", bps: 7000 },
@@ -67,7 +67,7 @@ export const EVENTS: EventConfig[] = [
     startTimeISO: new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString(),
     currency: "XRP",
     tiers: [
-      { tierId: "GA", name: "General Admission", priceXrp: "60", supply: 2, resaleCapBps: 1000 },
+      { tierId: "GA", name: "General Admission", priceXrp: "1", supply: 2, resaleCapBps: 1000 },
     ],
     primarySplits: [
       { name: "artist", address: "rARTIST_REPLACE_ME", bps: 6500 },

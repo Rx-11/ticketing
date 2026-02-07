@@ -36,7 +36,7 @@ const EVENTS = [
             {
                 tierId: "GA",
                 name: "General Admission",
-                priceXrp: "50",
+                priceXrp: "1",
                 supply: 2,
                 resaleCapBps: 1000
             }
@@ -93,7 +93,7 @@ const EVENTS = [
             {
                 tierId: "GA",
                 name: "General Admission",
-                priceXrp: "60",
+                priceXrp: "1",
                 supply: 2,
                 resaleCapBps: 1000
             }
@@ -176,18 +176,48 @@ function Home() {
             padding: 24
         },
         children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
+                style: {
+                    marginBottom: 24
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
+                        href: "/",
+                        style: {
+                            marginRight: 16
+                        },
+                        children: "Home"
+                    }, void 0, false, {
+                        fileName: "[project]/ticketing/app/page.tsx",
+                        lineNumber: 8,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
+                        href: "/my-tickets",
+                        children: "My Tickets"
+                    }, void 0, false, {
+                        fileName: "[project]/ticketing/app/page.tsx",
+                        lineNumber: 9,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/ticketing/app/page.tsx",
+                lineNumber: 7,
+                columnNumber: 7
+            }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                 children: "Fen Ticketing (MVP)"
             }, void 0, false, {
                 fileName: "[project]/ticketing/app/page.tsx",
-                lineNumber: 7,
+                lineNumber: 11,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                 children: "Hardcoded events:"
             }, void 0, false, {
                 fileName: "[project]/ticketing/app/page.tsx",
-                lineNumber: 8,
+                lineNumber: 12,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
@@ -202,7 +232,7 @@ function Home() {
                                         children: e.name
                                     }, void 0, false, {
                                         fileName: "[project]/ticketing/app/page.tsx",
-                                        lineNumber: 12,
+                                        lineNumber: 16,
                                         columnNumber: 18
                                     }, this),
                                     " (",
@@ -211,7 +241,7 @@ function Home() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/ticketing/app/page.tsx",
-                                lineNumber: 12,
+                                lineNumber: 16,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -222,7 +252,7 @@ function Home() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/ticketing/app/page.tsx",
-                                lineNumber: 13,
+                                lineNumber: 17,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
@@ -230,18 +260,18 @@ function Home() {
                                 children: "View event"
                             }, void 0, false, {
                                 fileName: "[project]/ticketing/app/page.tsx",
-                                lineNumber: 14,
+                                lineNumber: 18,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, e.eventId, true, {
                         fileName: "[project]/ticketing/app/page.tsx",
-                        lineNumber: 11,
+                        lineNumber: 15,
                         columnNumber: 11
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/ticketing/app/page.tsx",
-                lineNumber: 9,
+                lineNumber: 13,
                 columnNumber: 7
             }, this)
         ]

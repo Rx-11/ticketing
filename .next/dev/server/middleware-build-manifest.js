@@ -3,9 +3,22 @@ globalThis.__BUILD_MANIFEST = {
     "/_app": []
   },
   "devFiles": [],
-  "polyfillFiles": [],
+  "polyfillFiles": [
+    "static/chunks/8b4eb_next_dist_build_polyfills_polyfill-nomodule.js"
+  ],
   "lowPriorityFiles": [],
-  "rootMainFiles": []
+  "rootMainFiles": [
+    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_895ee23e._.js",
+    "static/chunks/8b4eb_next_dist_compiled_react-dom_1278c276._.js",
+    "static/chunks/8b4eb_next_dist_compiled_react-server-dom-turbopack_4a505419._.js",
+    "static/chunks/8b4eb_next_dist_compiled_next-devtools_index_27554216.js",
+    "static/chunks/8b4eb_next_dist_compiled_0f5c95d5._.js",
+    "static/chunks/8b4eb_next_dist_client_20c59931._.js",
+    "static/chunks/8b4eb_next_dist_a36b8472._.js",
+    "static/chunks/8b4eb_@swc_helpers_cjs_10002e30._.js",
+    "static/chunks/ticketing_a0ff3932._.js",
+    "static/chunks/turbopack-ticketing_a6339d4d._.js"
+  ]
 };
 globalThis.__BUILD_MANIFEST.lowPriorityFiles = [
 "/static/" + process.env.__NEXT_BUILD_ID + "/_buildManifest.js",

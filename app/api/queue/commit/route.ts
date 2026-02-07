@@ -31,6 +31,7 @@ export async function POST(req: Request) {
     commitHash: body.commitHash,
     commitTxHash: body.commitTxHash,
     createdAt: Date.now(),
+    status: "committed",
   });
 
   return NextResponse.json({ ok: true });

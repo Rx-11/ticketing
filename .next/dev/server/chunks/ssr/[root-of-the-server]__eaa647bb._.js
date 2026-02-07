@@ -36,7 +36,7 @@ const EVENTS = [
             {
                 tierId: "GA",
                 name: "General Admission",
-                priceXrp: "50",
+                priceXrp: "1",
                 supply: 2,
                 resaleCapBps: 1000
             }
@@ -93,7 +93,7 @@ const EVENTS = [
             {
                 tierId: "GA",
                 name: "General Admission",
-                priceXrp: "60",
+                priceXrp: "1",
                 supply: 2,
                 resaleCapBps: 1000
             }

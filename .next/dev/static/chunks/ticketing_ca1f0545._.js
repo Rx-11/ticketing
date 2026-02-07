@@ -11,8 +11,8 @@ function requiredStakeXrp(score) {
     // Simple, obvious curve for demo:
     // score 0 => 25 XRP
     // score 80 => ~5 XRP
-    const maxStake = 25;
-    const minStake = 5;
+    const maxStake = 2.5;
+    const minStake = 0.5;
     const clamped = Math.max(0, Math.min(100, score));
     const t = clamped / 100; // 0..1
     const stake = maxStake - (maxStake - minStake) * t;
@@ -106,6 +106,22 @@ function EventClient({ eventId }) {
     _s();
     const [seed, setSeed] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [walletAddr, setWalletAddr] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
+    // Helper for explorer links
+    const explorerUrl = (type, id)=>`https://testnet.xrpl.org/${type === "tx" ? "transactions" : type}/${id}`;
+    // Persist seed
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "EventClient.useEffect": ()=>{
+            const savedSeed = localStorage.getItem("fen_wallet_seed");
+            if (savedSeed) setSeed(savedSeed);
+        }
+    }["EventClient.useEffect"], []);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "EventClient.useEffect": ()=>{
+            if (seed) localStorage.setItem("fen_wallet_seed", seed);
+        }
+    }["EventClient.useEffect"], [
+        seed
+    ]);
     const [score, setScore] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [loadingScore, setLoadingScore] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [status, setStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
@@ -113,7 +129,7 @@ function EventClient({ eventId }) {
     const [secret, setSecret] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [nonce, setNonce] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const xrplWs = ("TURBOPACK compile-time value", "wss://s.altnet.rippletest.net:51233");
-    const platformAddr = ("TURBOPACK compile-time value", "rL35NKQHwnDbXtgbRreJNx3EFaA789hrbd");
+    const platformAddr = ("TURBOPACK compile-time value", "rakUrWgdMQYNVUXkPr5UvNhRrNp1FAgsmx");
     // Hardcode tier for MVP
     const tierId = "GA";
     // Derive wallet address from seed
@@ -236,228 +252,566 @@ function EventClient({ eventId }) {
             } catch  {}
         }
     }
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-        children: [
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                children: "Join Queue"
-            }, void 0, false, {
-                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                lineNumber: 144,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                style: {
-                    opacity: 0.7,
-                    marginBottom: 10
+    // Poll queue status
+    const [queueStatus, setQueueStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "EventClient.useEffect": ()=>{
+            if (!walletAddr) {
+                setQueueStatus(null);
+                return;
+            }
+            const timer = setInterval({
+                "EventClient.useEffect.timer": async ()=>{
+                    try {
+                        const res = await fetch(`/api/queue/status?eventId=${eventId}&tierId=${tierId}&wallet=${walletAddr}`);
+                        const data = await res.json();
+                        setQueueStatus(data);
+                        // Auto-load secret/nonce from localStorage if found
+                        const key = `fen_commit_${eventId}_${tierId}_${walletAddr}`;
+                        const saved = localStorage.getItem(key);
+                        if (saved) {
+                            const { secret: s, nonce: n, hash: h } = JSON.parse(saved);
+                            setSecret(s);
+                            setNonce(n);
+                            setCommitHash(h);
+                        }
+                    } catch (e) {
+                        console.error("Queue poll error", e);
+                    }
+                }
+            }["EventClient.useEffect.timer"], 3000);
+            return ({
+                "EventClient.useEffect": ()=>clearInterval(timer)
+            })["EventClient.useEffect"];
+        }
+    }["EventClient.useEffect"], [
+        walletAddr,
+        eventId,
+        tierId
+    ]);
+    // Save secret/nonce to localStorage when generated
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "EventClient.useEffect": ()=>{
+            if (commitHash && secret && nonce && walletAddr) {
+                const key = `fen_commit_${eventId}_${tierId}_${walletAddr}`;
+                localStorage.setItem(key, JSON.stringify({
+                    secret,
+                    nonce,
+                    hash: commitHash
+                }));
+            }
+        }
+    }["EventClient.useEffect"], [
+        commitHash,
+        secret,
+        nonce,
+        walletAddr,
+        eventId,
+        tierId
+    ]);
+    async function doReveal() {
+        if (!secret || !nonce) return setStatus("Missing secret/nonce. Did you clear your cache?");
+        setStatus("Revealing and purchasing ticket (processing refund + NFT mint)…");
+        try {
+            const res = await fetch("/api/queue/reveal", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
                 },
-                children: [
-                    "Event: ",
+                body: JSON.stringify({
                     eventId,
-                    " • Tier: ",
-                    tierId
-                ]
-            }, void 0, true, {
-                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                lineNumber: 145,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                style: {
-                    display: "grid",
-                    gap: 10,
-                    maxWidth: 720
-                },
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                        children: [
-                            "Testnet seed (MVP/dev only):",
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                value: seed,
-                                onChange: (e)=>setSeed(e.target.value),
-                                placeholder: "s████████████...",
-                                style: {
-                                    marginLeft: 8,
-                                    width: "100%",
-                                    padding: 8
-                                }
-                            }, void 0, false, {
-                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                lineNumber: 150,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                        lineNumber: 148,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
-                                children: "Wallet:"
-                            }, void 0, false, {
-                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                lineNumber: 159,
-                                columnNumber: 11
-                            }, this),
-                            " ",
-                            walletAddr || /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                style: {
-                                    opacity: 0.6
-                                },
-                                children: "—"
-                            }, void 0, false, {
-                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                lineNumber: 159,
-                                columnNumber: 41
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                        lineNumber: 158,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        children: [
-                            loadingScore && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                children: "Loading score…"
-                            }, void 0, false, {
-                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                lineNumber: 163,
-                                columnNumber: 28
-                            }, this),
-                            !loadingScore && score !== null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
-                                                children: "FenScore:"
-                                            }, void 0, false, {
-                                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                                lineNumber: 166,
-                                                columnNumber: 20
-                                            }, this),
-                                            " ",
-                                            score
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                        lineNumber: 166,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
-                                                children: "Required stake:"
-                                            }, void 0, false, {
-                                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                                lineNumber: 167,
-                                                columnNumber: 20
-                                            }, this),
-                                            " ",
-                                            stakeXrp,
-                                            " XRP"
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                        lineNumber: 167,
-                                        columnNumber: 15
-                                    }, this)
-                                ]
-                            }, void 0, true)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                        lineNumber: 162,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                        onClick: doCommit,
-                        style: {
-                            padding: "10px 12px",
-                            width: 200
-                        },
-                        children: "Commit (stake XRP)"
-                    }, void 0, false, {
-                        fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                        lineNumber: 172,
-                        columnNumber: 9
-                    }, this),
-                    status && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        style: {
-                            whiteSpace: "pre-wrap"
-                        },
-                        children: status
-                    }, void 0, false, {
-                        fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                        lineNumber: 176,
-                        columnNumber: 20
-                    }, this),
-                    commitHash && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        style: {
-                            marginTop: 6
-                        },
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
-                                        children: "CommitHash:"
+                    tierId,
+                    wallet: walletAddr,
+                    secret,
+                    nonce
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setStatus(`Reveal failed: ${data.error}`);
+                return;
+            }
+            setStatus("✅ Success! Your stake has been refunded and your NFT ticket is being minted.");
+        } catch (e) {
+            setStatus(`Reveal error: ${e.message}`);
+        }
+    }
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            style: {
+                display: "grid",
+                gap: 10,
+                maxWidth: 720
+            },
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                    children: "1. Identity & Score"
+                }, void 0, false, {
+                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                    lineNumber: 217,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                    children: [
+                        "Testnet seed (MVP/dev only):",
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                            value: seed,
+                            onChange: (e)=>setSeed(e.target.value),
+                            placeholder: "s████████████...",
+                            style: {
+                                marginLeft: 8,
+                                width: "100%",
+                                padding: 8,
+                                background: "#111",
+                                color: "#fff",
+                                border: "1px solid #333"
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 220,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                    lineNumber: 218,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                            children: "Wallet:"
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 229,
+                            columnNumber: 11
+                        }, this),
+                        " ",
+                        walletAddr || /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                opacity: 0.6
+                            },
+                            children: "—"
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 229,
+                            columnNumber: 41
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                    lineNumber: 228,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    children: [
+                        loadingScore && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            children: "Loading score…"
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 233,
+                            columnNumber: 28
+                        }, this),
+                        !loadingScore && score !== null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                padding: 12,
+                                border: "1px solid #333",
+                                borderRadius: 8,
+                                background: "#0a0a0a"
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                            children: "FenScore:"
+                                        }, void 0, false, {
+                                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                            lineNumber: 236,
+                                            columnNumber: 20
+                                        }, this),
+                                        " ",
+                                        score
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 236,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                            children: "Required stake:"
+                                        }, void 0, false, {
+                                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                            lineNumber: 237,
+                                            columnNumber: 20
+                                        }, this),
+                                        " ",
+                                        stakeXrp,
+                                        " XRP"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 237,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 235,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                    lineNumber: 232,
+                    columnNumber: 9
+                }, this),
+                walletAddr && (!queueStatus || queueStatus.status === "not_found") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                            children: "2. Stake & Queue"
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 244,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            onClick: doCommit,
+                            style: {
+                                padding: "10px 12px",
+                                width: "100%",
+                                background: "#0070f3",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 4,
+                                cursor: "pointer"
+                            },
+                            children: [
+                                "Commit (stake ",
+                                stakeXrp,
+                                " XRP)"
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 245,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true),
+                queueStatus && queueStatus.status === "committed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        padding: 12,
+                        border: "1px solid #0070f3",
+                        borderRadius: 8,
+                        background: "rgba(0, 112, 243, 0.1)"
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                            children: "2. Queue Status"
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 253,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                fontSize: 20,
+                                fontWeight: "bold"
+                            },
+                            children: [
+                                "Position: #",
+                                queueStatus.position,
+                                " / ",
+                                queueStatus.total
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 254,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                opacity: 0.8,
+                                marginTop: 8
+                            },
+                            children: [
+                                "You have staked ",
+                                queueStatus.entry.stakeXrp,
+                                " XRP. Your commitment is on-ledger.",
+                                queueStatus.entry.commitTxHash && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: {
+                                        marginTop: 4
+                                    },
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                        href: explorerUrl("tx", queueStatus.entry.commitTxHash),
+                                        target: "_blank",
+                                        rel: "noopener noreferrer",
+                                        style: {
+                                            color: "#0070f3",
+                                            fontSize: 12
+                                        },
+                                        children: "View Commit Tx on Explorer ↗"
                                     }, void 0, false, {
                                         fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                        lineNumber: 180,
-                                        columnNumber: 18
-                                    }, this),
-                                    " ",
-                                    commitHash
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                lineNumber: 180,
-                                columnNumber: 13
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                style: {
-                                    opacity: 0.7,
-                                    fontSize: 12
-                                },
-                                children: "(secret+nonce generated locally; keep them for reveal step)"
-                            }, void 0, false, {
-                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                lineNumber: 181,
-                                columnNumber: 13
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                style: {
-                                    opacity: 0.7,
-                                    fontSize: 12
-                                },
-                                children: [
-                                    "secret: ",
-                                    secret,
-                                    " • nonce: ",
-                                    nonce
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                lineNumber: 184,
-                                columnNumber: 13
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                        lineNumber: 179,
-                        columnNumber: 11
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                lineNumber: 147,
-                columnNumber: 7
-            }, this)
-        ]
-    }, void 0, true);
+                                        lineNumber: 259,
+                                        columnNumber: 19
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 258,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 255,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                            style: {
+                                marginTop: 24
+                            },
+                            children: "3. Buy Ticket (Reveal)"
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 266,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            style: {
+                                fontSize: 13,
+                                opacity: 0.7
+                            },
+                            children: [
+                                "Ready to buy? This will reveal your secret, refund your ",
+                                queueStatus.entry.stakeXrp,
+                                " XRP stake, and mint your NFT ticket.",
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                    children: " You will then need to accept the NFT offer to pay the ticket price."
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 269,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 267,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            onClick: doReveal,
+                            style: {
+                                padding: "10px 12px",
+                                width: "100%",
+                                background: "#27ae60",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 4,
+                                cursor: "pointer"
+                            },
+                            children: "Reveal & Buy Ticket"
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 272,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                    lineNumber: 252,
+                    columnNumber: 11
+                }, this),
+                queueStatus && queueStatus.status === "claimed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        padding: 12,
+                        border: "1px solid #27ae60",
+                        borderRadius: 8,
+                        background: "rgba(39, 174, 96, 0.1)"
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                            children: "🎉 Ticket Secured!"
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 280,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            children: "Your stake has been refunded. Your NFT ticket is minted and a 1 XRP offer has been created for you."
+                        }, void 0, false, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 281,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                fontSize: 12,
+                                opacity: 0.7,
+                                wordBreak: "break-all"
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                    children: "Refund Tx:"
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 283,
+                                    columnNumber: 15
+                                }, this),
+                                " ",
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                    href: explorerUrl("tx", queueStatus.entry.revealTxHash),
+                                    target: "_blank",
+                                    rel: "noopener noreferrer",
+                                    style: {
+                                        color: "#27ae60"
+                                    },
+                                    children: queueStatus.entry.revealTxHash
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 283,
+                                    columnNumber: 33
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 283,
+                                    columnNumber: 200
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                    children: "NFT ID:"
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 284,
+                                    columnNumber: 15
+                                }, this),
+                                " ",
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                    href: explorerUrl("nft", queueStatus.entry.nftId),
+                                    target: "_blank",
+                                    rel: "noopener noreferrer",
+                                    style: {
+                                        color: "#27ae60"
+                                    },
+                                    children: queueStatus.entry.nftId
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 284,
+                                    columnNumber: 30
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 284,
+                                    columnNumber: 184
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                    children: "Offer Tx:"
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 285,
+                                    columnNumber: 15
+                                }, this),
+                                " ",
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                    href: explorerUrl("tx", queueStatus.entry.offerTxHash),
+                                    target: "_blank",
+                                    rel: "noopener noreferrer",
+                                    style: {
+                                        color: "#27ae60"
+                                    },
+                                    children: queueStatus.entry.offerTxHash || "N/A"
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 285,
+                                    columnNumber: 32
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 282,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                    lineNumber: 279,
+                    columnNumber: 11
+                }, this),
+                status && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        marginTop: 12,
+                        padding: 10,
+                        background: "#222",
+                        borderRadius: 4,
+                        fontSize: 14
+                    },
+                    children: status
+                }, void 0, false, {
+                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                    lineNumber: 292,
+                    columnNumber: 11
+                }, this),
+                commitHash && queueStatus?.status !== "claimed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        marginTop: 6,
+                        padding: 10,
+                        border: "1px dashed #444",
+                        borderRadius: 4
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                fontSize: 12,
+                                opacity: 0.7
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                    children: "CommitHash:"
+                                }, void 0, false, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 299,
+                                    columnNumber: 57
+                                }, this),
+                                " ",
+                                commitHash
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 299,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                opacity: 0.5,
+                                fontSize: 11
+                            },
+                            children: [
+                                "Secret: ",
+                                secret,
+                                " • Nonce: ",
+                                nonce,
+                                " (Stored in local storage)"
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                            lineNumber: 300,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                    lineNumber: 298,
+                    columnNumber: 11
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+            lineNumber: 216,
+            columnNumber: 7
+        }, this)
+    }, void 0, false);
 }
-_s(EventClient, "IX3GuggIp6z04OdTjM6mps5KNC4=");
+_s(EventClient, "oAIJrRtwPJufoMJRW23x737cz6Y=");
 _c = EventClient;
 var _c;
 __turbopack_context__.k.register(_c, "EventClient");

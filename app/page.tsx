@@ -4,6 +4,10 @@ import { EVENTS } from "@/lib/events";
 export default function Home() {
   return (
     <main style={{ padding: 24 }}>
+      <nav style={{ marginBottom: 24 }}>
+        <Link href="/" style={{ marginRight: 16 }}>Home</Link>
+        <Link href="/my-tickets">My Tickets</Link>
+      </nav>
       <h1>Fen Ticketing (MVP)</h1>
       <p>Hardcoded events:</p>
       <ul>
