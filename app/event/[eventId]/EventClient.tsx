@@ -263,9 +263,65 @@ export default function EventClient({ eventId }: { eventId: string }) {
           />
         </div>
 
+<<<<<<< HEAD
         {walletAddr && (
           <div className="text-xs font-mono text-[var(--text-muted)] break-all">
             Wallet: {walletAddr}
+=======
+        <div>
+          {loadingScore && <div>Loading score…</div>}
+          {!loadingScore && score !== null && (
+            <div style={{ padding: 12, border: "1px solid #333", borderRadius: 8, background: "#0a0a0a" }}>
+              <div><b>FenScore:</b> {score}</div>
+              <div><b>Required stake:</b> {stakeXrp} XRP</div>
+            </div>
+          )}
+        </div>
+
+        {walletAddr && (!queueStatus || queueStatus.status === "not_found") && (
+          <>
+            <h2>2. Stake & Queue</h2>
+            <button onClick={doCommit} style={{ padding: "10px 12px", width: "100%", background: "#0070f3", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}>
+              Commit (stake {stakeXrp} XRP)
+            </button>
+          </>
+        )}
+
+        {queueStatus && queueStatus.status === "committed" && (
+          <div style={{ padding: 12, border: "1px solid #0070f3", borderRadius: 8, background: "rgba(0, 112, 243, 0.1)" }}>
+            <h2>2. Queue Status</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+              <div style={{ padding: 10, border: "1px solid #333", borderRadius: 6, background: "#111" }}>
+                <div style={{ fontSize: 11, opacity: 0.6 }}>Current Queue Position</div>
+                <div style={{ fontSize: 20, fontWeight: "bold" }}>#{queueStatus.absolutePosition}</div>
+              </div>
+              <div style={{ padding: 10, border: "1px solid #0070f3", borderRadius: 6, background: "rgba(0, 112, 243, 0.1)" }}>
+                <div style={{ fontSize: 11, color: "#0070f3" }}>Actual Position (Waiting)</div>
+                <div style={{ fontSize: 20, fontWeight: "bold", color: "#0070f3" }}>#{queueStatus.waitingPosition}</div>
+              </div>
+            </div>
+
+            <div style={{ opacity: 0.8, marginTop: 8 }}>
+              You have staked {queueStatus.entry.stakeXrp} XRP. Your commitment is on-ledger.
+              {queueStatus.entry.commitTxHash && (
+                <div style={{ marginTop: 4 }}>
+                  <a href={explorerUrl("tx", queueStatus.entry.commitTxHash)} target="_blank" rel="noopener noreferrer" style={{ color: "#0070f3", fontSize: 12 }}>
+                    View Commit Tx on Explorer ↗
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <h2 style={{ marginTop: 24 }}>3. Buy Ticket (Reveal)</h2>
+            <p style={{ fontSize: 13, opacity: 0.7 }}>
+              Ready to buy? This will reveal your secret, refund your {queueStatus.entry.stakeXrp} XRP stake, and mint your NFT ticket.
+              <b> You will then need to accept the NFT offer to pay the ticket price.</b>
+            </p>
+
+            <button onClick={doReveal} style={{ padding: "10px 12px", width: "100%", background: "#27ae60", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}>
+              Reveal & Buy Ticket
+            </button>
+>>>>>>> main
           </div>
         )}
 
@@ -282,9 +338,57 @@ export default function EventClient({ eventId }: { eventId: string }) {
               <span className="label">FenScore</span>
               <span className="value">{score}</span>
             </div>
+<<<<<<< HEAD
             <div className="stat-pill flex-1">
               <span className="label">Required Stake</span>
               <span className="value">{stakeXrp} XRP</span>
+=======
+          </div>
+        )}
+
+
+        {status && (
+          <div style={{ marginTop: 12, padding: 10, background: "#222", borderRadius: 4, fontSize: 14 }}>
+            {status}
+          </div>
+        )}
+
+        {queueStatus && queueStatus.queueList && (
+          <div style={{ marginTop: 24, padding: 16, border: "1px solid #333", borderRadius: 8, background: "#050505" }}>
+            <h2 style={{ marginTop: 0 }}>4. Live Queue (On-Ledger)</h2>
+            <div style={{ display: "grid", gap: 10 }}>
+              {queueStatus.queueList.map((q: any, i: number) => {
+                const isMe = q.wallet === walletAddr;
+                return (
+                  <div key={i} style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 12px",
+                    background: isMe ? "rgba(0, 112, 243, 0.1)" : "#111",
+                    border: isMe ? "1px solid #0070f3" : "1px solid #222",
+                    borderRadius: 6
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: "bold" }}>
+                        #{i + 1} {q.wallet.slice(0, 8)}...{q.wallet.slice(-4)} {isMe && "(You)"}
+                      </div>
+                      <div style={{ fontSize: 11, opacity: 0.6 }}>
+                        Staked at {new Date(q.createdAt).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <a
+                      href={explorerUrl("tx", q.commitTxHash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 11, color: "#0070f3", textDecoration: "none" }}
+                    >
+                      Verify Tx ↗
+                    </a>
+                  </div>
+                );
+              })}
+>>>>>>> main
             </div>
           </div>
         )}
@@ -474,3 +578,4 @@ export default function EventClient({ eventId }: { eventId: string }) {
     </div>
   );
 }
+

@@ -1,6 +1,5 @@
-// app/api/queue/commit/route.ts
 import { NextResponse } from "next/server";
-import { fenDb } from "@/lib/memoryDb";
+import { fenDb } from "@/lib/db";
 import { z } from "zod";
 
 const Body = z.object({

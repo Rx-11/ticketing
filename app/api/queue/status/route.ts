@@ -1,6 +1,5 @@
-// app/api/queue/status/route.ts
 import { NextResponse } from "next/server";
-import { fenDb } from "@/lib/memoryDb";
+import { fenDb } from "@/lib/db";
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -12,21 +11,30 @@ export async function GET(req: Request) {
         return NextResponse.json({ ok: false, error: "Missing params" }, { status: 400 });
     }
 
-    const entriesForTier = fenDb.queue
-        .filter((q) => q.eventId === eventId && q.tierId === tierId)
-        .sort((a, b) => a.createdAt - b.createdAt);
+    // Get all entries for this tier to show the "live queue"
+    const entriesForTier = fenDb.queue.getAll()
+        .filter((q: any) => q.eventId === eventId && q.tierId === tierId);
 
-    const index = entriesForTier.findIndex((q) => q.wallet === wallet);
-    const entry = entriesForTier[index];
+    const activeWaiters = entriesForTier.filter((q: any) => q.status === "committed");
 
-    if (index === -1) {
-        return NextResponse.json({ status: "not_found" });
-    }
+    const absIndex = entriesForTier.findIndex((q: any) => q.wallet === wallet);
+    const waitingIndex = activeWaiters.findIndex((q: any) => q.wallet === wallet);
+
+    const entry = absIndex !== -1 ? entriesForTier[absIndex] : null;
 
     return NextResponse.json({
-        status: entry.status,
-        position: index + 1,
+        status: entry ? entry.status : "not_found",
+        absolutePosition: absIndex !== -1 ? absIndex + 1 : -1,
+        waitingPosition: waitingIndex !== -1 ? waitingIndex + 1 : -1,
         total: entriesForTier.length,
+        totalWaiting: activeWaiters.length,
         entry,
+        queueList: entriesForTier.map((q: any) => ({
+            wallet: q.wallet,
+            commitTxHash: q.commitTxHash,
+            createdAt: q.createdAt,
+            status: q.status
+        }))
     });
 }
+

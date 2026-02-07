@@ -14,6 +14,7 @@ export default function MarketplaceClient() {
 
   const xrplWs = process.env.NEXT_PUBLIC_XRPL_WS!;
 
+<<<<<<< HEAD
   useEffect(() => {
     try {
       if (!seed.trim()) {
@@ -24,9 +25,50 @@ export default function MarketplaceClient() {
       setWalletAddr(w.classicAddress);
     } catch {
       setWalletAddr("");
+=======
+    // Helper for explorer links
+    const explorerUrl = (type: "tx" | "nft" | "address", id: string) => `https://testnet.xrpl.org/${type === "tx" ? "transactions" : type}/${id}`;
+
+    // Persist seed
+    useEffect(() => {
+        const savedSeed = localStorage.getItem("fen_wallet_seed");
+        if (savedSeed) setSeed(savedSeed);
+    }, []);
+
+    useEffect(() => {
+        if (seed) localStorage.setItem("fen_wallet_seed", seed);
+    }, [seed]);
+
+    // Derive wallet address from seed
+    useEffect(() => {
+        try {
+            if (!seed.trim()) {
+                setWalletAddr("");
+                return;
+            }
+            const w = xrpl.Wallet.fromSeed(seed.trim());
+            setWalletAddr(w.classicAddress);
+        } catch {
+            setWalletAddr("");
+        }
+    }, [seed]);
+
+    async function loadOffers() {
+        setLoading(true);
+        try {
+            const res = await fetch("/api/tickets/resale");
+            const data = await res.json();
+            setOffers(data.offers || []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+>>>>>>> main
     }
   }, [seed]);
 
+<<<<<<< HEAD
   async function loadOffers() {
     setLoading(true);
     try {
@@ -37,6 +79,53 @@ export default function MarketplaceClient() {
       console.error(e);
     } finally {
       setLoading(false);
+=======
+    useEffect(() => {
+        loadOffers();
+    }, []);
+
+    async function handleBuy(offer: any) {
+        if (!walletAddr) return alert("Enter your seed first!");
+        setStatus(`Purchasing ticket for ${offer.priceXrp} XRP…`);
+
+        const client = new xrpl.Client(xrplWs);
+        try {
+            await client.connect();
+            const wallet = xrpl.Wallet.fromSeed(seed.trim());
+
+            let offerIndexToAccept = offer.offerIndex;
+
+            // If offerIndex is missing in DB, try to find it on-ledger as fallback
+            if (!offerIndexToAccept) {
+                const nftOffers = await client.request({
+                    command: "nft_sell_offers",
+                    nft_id: offer.nftId,
+                });
+                const actualOffer = (nftOffers.result.offers as any[]).find(o => o.owner === offer.seller);
+                if (!actualOffer) {
+                    setStatus("Could not find the sell offer on-ledger.");
+                    return;
+                }
+                offerIndexToAccept = actualOffer.nft_offer_index;
+            }
+
+            const acceptOffer: xrpl.NFTokenAcceptOffer = {
+                TransactionType: "NFTokenAcceptOffer",
+                Account: walletAddr,
+                NFTokenSellOffer: offerIndexToAccept,
+            };
+
+            const result = await client.submitAndWait(acceptOffer, { wallet });
+            const txHash = (result.result as any).hash;
+
+            setStatus(`✅ Purchase successful! Tx: ${txHash}`);
+            loadOffers(); // Refresh
+        } catch (e: any) {
+            setStatus(`Error: ${e.message}`);
+        } finally {
+            await client.disconnect();
+        }
+>>>>>>> main
     }
   }
 
@@ -69,6 +158,7 @@ export default function MarketplaceClient() {
         return;
       }
 
+<<<<<<< HEAD
       const acceptOffer: xrpl.NFTokenAcceptOffer = {
         TransactionType: "NFTokenAcceptOffer",
         Account: walletAddr,
@@ -112,6 +202,21 @@ export default function MarketplaceClient() {
         <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
           <span className="spinner spinner-sm spinner-indigo" />
           Loading resale offers…
+=======
+            {status && (
+                <div style={{ padding: 12, background: "#222", borderRadius: 8, fontSize: 14 }}>
+                    {status.includes("Tx:") ? (
+                        <>
+                            {status.split("Tx:")[0]}
+                            <a href={explorerUrl("tx", status.split("Tx:")[1].trim())} target="_blank" rel="noopener noreferrer" style={{ color: "#27ae60" }}>
+                                View on Explorer ↗
+                            </a>
+                        </>
+                    ) : status}
+                </div>
+            )}
+
+>>>>>>> main
         </div>
       )}
 
