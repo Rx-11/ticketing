@@ -5,146 +5,189 @@ import { getEvent, getTier } from "@/lib/events";
 import * as xrpl from "xrpl";
 
 export default function MarketplaceClient() {
-    const [seed, setSeed] = useState("");
-    const [walletAddr, setWalletAddr] = useState("");
-    const [offers, setOffers] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState("");
+  const [seed, setSeed] = useState("");
+  const [walletAddr, setWalletAddr] = useState("");
+  const [offers, setOffers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
+  const [buying, setBuying] = useState(false);
 
-    const xrplWs = process.env.NEXT_PUBLIC_XRPL_WS!;
+  const xrplWs = process.env.NEXT_PUBLIC_XRPL_WS!;
 
-    // Derive wallet address from seed
-    useEffect(() => {
-        try {
-            if (!seed.trim()) {
-                setWalletAddr("");
-                return;
-            }
-            const w = xrpl.Wallet.fromSeed(seed.trim());
-            setWalletAddr(w.classicAddress);
-        } catch {
-            setWalletAddr("");
-        }
-    }, [seed]);
-
-    async function loadOffers() {
-        setLoading(true);
-        try {
-            const res = await fetch("/api/tickets/resale");
-            const data = await res.json();
-            setOffers(data.offers || []);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+  useEffect(() => {
+    try {
+      if (!seed.trim()) {
+        setWalletAddr("");
+        return;
+      }
+      const w = xrpl.Wallet.fromSeed(seed.trim());
+      setWalletAddr(w.classicAddress);
+    } catch {
+      setWalletAddr("");
     }
+  }, [seed]);
 
-    useEffect(() => {
-        loadOffers();
-    }, []);
-
-    async function handleBuy(offer: any) {
-        if (!walletAddr) return alert("Enter your seed first!");
-
-        setStatus(`Purchasing ticket for ${offer.priceXrp} XRP…`);
-
-        const client = new xrpl.Client(xrplWs);
-        try {
-            await client.connect();
-            const wallet = xrpl.Wallet.fromSeed(seed.trim());
-
-            // In a real app, the offerId would be the actual XRPL Offer Index.
-            // For this demo, we'll try to find the offer on-ledger by NFTokenID.
-            const nftOffers = await client.request({
-                command: "nft_sell_offers",
-                nft_id: offer.nftId,
-            });
-
-            const actualOffer = (nftOffers.result.offers as any[]).find(o => o.owner === offer.seller);
-            if (!actualOffer) {
-                setStatus("Could not find the sell offer on-ledger.");
-                return;
-            }
-
-            const acceptOffer: xrpl.NFTokenAcceptOffer = {
-                TransactionType: "NFTokenAcceptOffer",
-                Account: walletAddr,
-                NFTokenSellOffer: actualOffer.nft_offer_index,
-            };
-
-            const result = await client.submitAndWait(acceptOffer, { wallet });
-            setStatus("✅ Purchase successful! The NFT ticket is now in your wallet.");
-            loadOffers(); // Refresh
-        } catch (e: any) {
-            setStatus(`Error: ${e.message}`);
-        } finally {
-            await client.disconnect();
-        }
+  async function loadOffers() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/tickets/resale");
+      const data = await res.json();
+      setOffers(data.offers || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    return (
-        <div style={{ display: "grid", gap: 20 }}>
-            <div>
-                <label>
-                    Enter your Testnet Seed to buy tickets:
-                    <input
-                        type="password"
-                        value={seed}
-                        onChange={(e) => setSeed(e.target.value)}
-                        placeholder="s████████████..."
-                        style={{ width: "100%", padding: 12, marginTop: 8, background: "#111", color: "#fff", border: "1px solid #333" }}
-                    />
-                </label>
-                {walletAddr && <div style={{ marginTop: 8, fontSize: 13, opacity: 0.7 }}>Buying as: {walletAddr}</div>}
-            </div>
+  useEffect(() => {
+    loadOffers();
+  }, []);
 
-            {loading && <div>Loading active resale offers…</div>}
+  async function handleBuy(offer: any) {
+    if (!walletAddr) return alert("Enter your seed first!");
 
-            {!loading && offers.length === 0 && (
-                <div style={{ padding: 40, textAlign: "center", border: "1px dashed #333", borderRadius: 8 }}>
-                    No active resale offers found.
-                </div>
-            )}
+    setBuying(true);
+    setStatus(`Purchasing ticket for ${offer.priceXrp} XRP…`);
 
-            <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-                {offers.map((o, i) => {
-                    const event = getEvent(o.eventId);
-                    const tier = getTier(o.eventId, o.tierId);
-                    return (
-                        <div key={i} style={{ padding: 16, border: "1px solid #333", borderRadius: 12, background: "#0c0c0c" }}>
-                            <div style={{ fontSize: 12, color: "#27ae60", marginBottom: 4, fontWeight: "bold" }}>RESALE LISTING</div>
-                            <h3 style={{ margin: "0 0 8px 0" }}>{event.name}</h3>
-                            <div style={{ fontSize: 14, opacity: 0.8 }}>{tier.name}</div>
+    const client = new xrpl.Client(xrplWs);
+    try {
+      await client.connect();
+      const wallet = xrpl.Wallet.fromSeed(seed.trim());
 
-                            <div style={{ marginTop: 16, fontSize: 24, fontWeight: "bold", color: "#fff" }}>
-                                {o.priceXrp} XRP
-                            </div>
-                            <div style={{ fontSize: 12, opacity: 0.6 }}>
-                                Retail price: {tier.priceXrp} XRP
-                            </div>
+      const nftOffers = await client.request({
+        command: "nft_sell_offers",
+        nft_id: offer.nftId,
+      });
 
-                            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #222" }}>
-                                <button
-                                    onClick={() => handleBuy(o)}
-                                    style={{ width: "100%", padding: 10, background: "#27ae60", border: "none", color: "#fff", borderRadius: 4, cursor: "pointer", fontWeight: "bold" }}
-                                >
-                                    Buy Ticket
-                                </button>
-                                <div style={{ fontSize: 11, opacity: 0.5, marginTop: 8, textAlign: "center" }}>
-                                    Seller: {o.seller.slice(0, 10)}...
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+      const actualOffer = (nftOffers.result.offers as any[]).find(
+        (o) => o.owner === offer.seller
+      );
+      if (!actualOffer) {
+        setStatus("Could not find the sell offer on-ledger.");
+        setBuying(false);
+        return;
+      }
 
-            {status && (
-                <div style={{ padding: 12, background: "#222", borderRadius: 8, fontSize: 14 }}>
-                    {status}
-                </div>
-            )}
+      const acceptOffer: xrpl.NFTokenAcceptOffer = {
+        TransactionType: "NFTokenAcceptOffer",
+        Account: walletAddr,
+        NFTokenSellOffer: actualOffer.nft_offer_index,
+      };
+
+      await client.submitAndWait(acceptOffer, { wallet });
+      setStatus("✅ Purchase successful! The NFT ticket is now in your wallet.");
+      loadOffers();
+    } catch (e: any) {
+      setStatus(`Error: ${e.message}`);
+    } finally {
+      setBuying(false);
+      await client.disconnect();
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Seed input */}
+      <div className="glass p-5 slide-up">
+        <label className="text-xs font-medium text-[var(--text-secondary)] mb-1.5 block">
+          Enter your Testnet Seed to buy tickets
+        </label>
+        <input
+          type="password"
+          value={seed}
+          onChange={(e) => setSeed(e.target.value)}
+          placeholder="s████████████..."
+          className="input-glass"
+        />
+        {walletAddr && (
+          <div className="text-xs font-mono text-[var(--text-muted)] mt-2 break-all">
+            Buying as: {walletAddr}
+          </div>
+        )}
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+          <span className="spinner spinner-sm spinner-indigo" />
+          Loading resale offers…
         </div>
-    );
+      )}
+
+      {/* Empty state */}
+      {!loading && offers.length === 0 && (
+        <div className="glass p-12 text-center slide-up">
+          <p className="text-4xl mb-3">🏪</p>
+          <p className="text-sm font-medium text-[var(--text-secondary)]">
+            No active resale offers found.
+          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            Check back later or browse events directly.
+          </p>
+        </div>
+      )}
+
+      {/* Offer grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {offers.map((o, i) => {
+          const event = getEvent(o.eventId);
+          const tier = getTier(o.eventId, o.tierId);
+          return (
+            <div
+              key={i}
+              className="glass p-5 space-y-3 slide-up"
+              style={{ animationDelay: `${i * 0.1}s` }}
+            >
+              <div className="badge badge-mint text-[10px]">RESALE LISTING</div>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">
+                {event.name}
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)]">{tier.name}</p>
+
+              <div className="mt-2">
+                <span className="text-2xl font-bold text-[var(--text-primary)]">
+                  {o.priceXrp} XRP
+                </span>
+                <span className="text-xs text-[var(--text-muted)] ml-2">
+                  retail: {tier.priceXrp} XRP
+                </span>
+              </div>
+
+              <div className="pt-3 border-t border-black/5">
+                <button
+                  onClick={() => handleBuy(o)}
+                  disabled={buying}
+                  className="btn-primary w-full text-sm"
+                  style={{
+                    background: "linear-gradient(135deg, #059669 0%, #34d399 100%)",
+                    boxShadow: "0 2px 8px rgba(5,150,105,0.25)",
+                  }}
+                >
+                  {buying ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="spinner spinner-sm" />
+                      Purchasing…
+                    </span>
+                  ) : (
+                    "Buy Ticket"
+                  )}
+                </button>
+                <div className="text-[10px] text-[var(--text-muted)] text-center mt-2">
+                  Seller: {o.seller.slice(0, 10)}…
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Status */}
+      {status && (
+        <div className="glass p-3 text-sm text-[var(--text-secondary)]">
+          {status}
+        </div>
+      )}
+    </div>
+  );
 }
