@@ -1,10 +1,14 @@
 // lib/xrplMemo.ts
 export function utf8ToHex(str: string): string {
-  return Buffer.from(str, "utf8").toString("hex").toUpperCase();
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(str);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
 }
 
 export function makeCommitMemo(eventId: string, tierId: string, commitHash: string) {
-  // Keep it short. XRPL memos are hex strings.
   const memoString = `COMMIT|${eventId}|${tierId}|${commitHash}`;
   return {
     Memo: {

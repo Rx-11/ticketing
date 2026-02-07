@@ -1,6 +1,8 @@
 // app/event/[eventId]/page.tsx
 import { getEvent } from "@/lib/events";
 import EventClient from "./EventClient";
+import EventDetails from "./EventDetails";
+import Link from "next/link";
 
 export default async function Page({
   params,
@@ -11,59 +13,57 @@ export default async function Page({
   const event = getEvent(eventId);
 
   return (
-    <main style={{ padding: 24, maxWidth: 900 }}>
-      <h1>{event.name}</h1>
-      <div style={{ opacity: 0.8 }}>
-        {event.venueName} • {new Date(event.startTimeISO).toLocaleString()}
+    <main className="min-h-screen px-6 py-10 max-w-5xl mx-auto">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-8 slide-up">
+        <Link href="/events" className="hover:text-[var(--text-secondary)] transition-colors">
+          Events
+        </Link>
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+        <span className="text-[var(--text-secondary)] font-medium truncate">{event.name}</span>
       </div>
 
-      <hr style={{ margin: "16px 0" }} />
-
-      {/* Client-side interactive block */}
-      <EventClient eventId={event.eventId} />
-
-      <hr style={{ margin: "16px 0" }} />
-
-      <h2>Ticket tiers</h2>
-      <ul>
-        {event.tiers.map((t) => (
-          <li key={t.tierId} style={{ marginBottom: 10 }}>
-            <b>{t.name}</b> ({t.tierId}) — {t.priceXrp} XRP — supply {t.supply} — resale cap{" "}
-            {t.resaleCapBps / 100}%.
-          </li>
-        ))}
-      </ul>
-
-      <hr style={{ margin: "16px 0" }} />
-
-      <h2>Splits</h2>
-      <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-        <div>
-          <h3 style={{ marginBottom: 6 }}>Primary</h3>
-          <ul>
-            {event.primarySplits.map((s) => (
-              <li key={s.name}>
-                {s.name}: {(s.bps / 100).toFixed(2)}% ({s.address})
-              </li>
-            ))}
-          </ul>
+      {/* Event header */}
+      <div className="glass-strong p-8 mb-8 slide-up slide-up-delay-1">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="badge badge-indigo">{event.currency}</span>
+              <span className="badge badge-neutral">{event.eventId}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] leading-tight tracking-tight mb-2">
+              {event.name}
+            </h1>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 text-sm text-[var(--text-secondary)]">
+              <span className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {event.venueName}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {new Date(event.startTimeISO).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                {" at "}
+                {new Date(event.startTimeISO).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+              </span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3 style={{ marginBottom: 6 }}>Resale fees/royalty</h3>
-          <ul>
-            {event.resaleSplits.map((s) => (
-              <li key={s.name}>
-                {s.name}: {(s.bps / 100).toFixed(2)}% ({s.address})
-              </li>
-            ))}
-            <li>
-              seller:{" "}
-              {(
-                (10000 - event.resaleSplits.reduce((acc, x) => acc + x.bps, 0)) / 100
-              ).toFixed(2)}
-              %
-            </li>
-          </ul>
+      </div>
+
+      {/* Details + Commit */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3 slide-up slide-up-delay-2">
+          <EventDetails event={event} />
+        </div>
+        <div className="lg:col-span-2 slide-up slide-up-delay-3">
+          <EventClient eventId={event.eventId} />
         </div>
       </div>
     </main>
