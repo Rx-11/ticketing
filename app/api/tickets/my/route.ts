@@ -1,6 +1,5 @@
-// app/api/tickets/my/route.ts
 import { NextResponse } from "next/server";
-import { fenDb } from "@/lib/memoryDb";
+import { fenDb } from "@/lib/db";
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -10,9 +9,10 @@ export async function GET(req: Request) {
         return NextResponse.json({ ok: false, error: "Missing wallet" }, { status: 400 });
     }
 
-    const tickets = fenDb.queue.filter(
-        (q) => q.wallet === wallet && q.status === "claimed"
+    const tickets = fenDb.queue.getAll().filter(
+        (q: any) => q.wallet === wallet && q.status === "claimed"
     );
 
     return NextResponse.json({ tickets });
 }
+

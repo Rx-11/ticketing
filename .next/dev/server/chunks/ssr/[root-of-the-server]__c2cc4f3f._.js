@@ -790,48 +790,108 @@ function EventClient({ eventId }) {
                     lineNumber: 292,
                     columnNumber: 11
                 }, this),
-                commitHash && queueStatus?.status !== "claimed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                queueStatus && queueStatus.queueList && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     style: {
-                        marginTop: 6,
-                        padding: 10,
-                        border: "1px dashed #444",
-                        borderRadius: 4
+                        marginTop: 24,
+                        padding: 16,
+                        border: "1px solid #333",
+                        borderRadius: 8,
+                        background: "#050505"
                     },
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                             style: {
-                                fontSize: 12,
-                                opacity: 0.7
+                                marginTop: 0
                             },
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
-                                    children: "CommitHash:"
-                                }, void 0, false, {
-                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
-                                    lineNumber: 299,
-                                    columnNumber: 57
-                                }, this),
-                                " ",
-                                commitHash
-                            ]
-                        }, void 0, true, {
+                            children: "4. Live Queue (On-Ledger)"
+                        }, void 0, false, {
                             fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
                             lineNumber: 299,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             style: {
-                                opacity: 0.5,
-                                fontSize: 11
+                                display: "grid",
+                                gap: 10
                             },
-                            children: [
-                                "Secret: ",
-                                secret,
-                                " • Nonce: ",
-                                nonce,
-                                " (Stored in local storage)"
-                            ]
-                        }, void 0, true, {
+                            children: queueStatus.queueList.map((q, i)=>{
+                                const isMe = q.wallet === walletAddr;
+                                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: {
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        padding: "8px 12px",
+                                        background: isMe ? "rgba(0, 112, 243, 0.1)" : "#111",
+                                        border: isMe ? "1px solid #0070f3" : "1px solid #222",
+                                        borderRadius: 6
+                                    },
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    style: {
+                                                        fontSize: 13,
+                                                        fontWeight: "bold"
+                                                    },
+                                                    children: [
+                                                        "#",
+                                                        i + 1,
+                                                        " ",
+                                                        q.wallet.slice(0, 8),
+                                                        "...",
+                                                        q.wallet.slice(-4),
+                                                        " ",
+                                                        isMe && "(You)"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                                    lineNumber: 314,
+                                                    columnNumber: 23
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    style: {
+                                                        fontSize: 11,
+                                                        opacity: 0.6
+                                                    },
+                                                    children: [
+                                                        "Staked at ",
+                                                        new Date(q.createdAt).toLocaleTimeString()
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                                    lineNumber: 317,
+                                                    columnNumber: 23
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                            lineNumber: 313,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$ticketing$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                            href: explorerUrl("tx", q.commitTxHash),
+                                            target: "_blank",
+                                            rel: "noopener noreferrer",
+                                            style: {
+                                                fontSize: 11,
+                                                color: "#0070f3",
+                                                textDecoration: "none"
+                                            },
+                                            children: "Verify Tx ↗"
+                                        }, void 0, false, {
+                                            fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                            lineNumber: 321,
+                                            columnNumber: 21
+                                        }, this)
+                                    ]
+                                }, i, true, {
+                                    fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
+                                    lineNumber: 304,
+                                    columnNumber: 19
+                                }, this);
+                            })
+                        }, void 0, false, {
                             fileName: "[project]/ticketing/app/event/[eventId]/EventClient.tsx",
                             lineNumber: 300,
                             columnNumber: 13

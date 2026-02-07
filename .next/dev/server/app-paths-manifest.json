@@ -1,10 +1,5 @@
 {
-  "/api/queue/commit/route": "app/api/queue/commit/route.js",
-  "/api/queue/reveal/route": "app/api/queue/reveal/route.js",
-  "/api/queue/status/route": "app/api/queue/status/route.js",
-  "/api/score/route": "app/api/score/route.js",
   "/api/tickets/my/route": "app/api/tickets/my/route.js",
-  "/event/[eventId]/page": "app/event/[eventId]/page.js",
-  "/my-tickets/page": "app/my-tickets/page.js",
-  "/page": "app/page.js"
+  "/api/tickets/resale/route": "app/api/tickets/resale/route.js",
+  "/my-tickets/page": "app/my-tickets/page.js"
 }

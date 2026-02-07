@@ -251,7 +251,17 @@ export default function EventClient({ eventId }: { eventId: string }) {
         {queueStatus && queueStatus.status === "committed" && (
           <div style={{ padding: 12, border: "1px solid #0070f3", borderRadius: 8, background: "rgba(0, 112, 243, 0.1)" }}>
             <h2>2. Queue Status</h2>
-            <div style={{ fontSize: 20, fontWeight: "bold" }}>Position: #{queueStatus.position} / {queueStatus.total}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+              <div style={{ padding: 10, border: "1px solid #333", borderRadius: 6, background: "#111" }}>
+                <div style={{ fontSize: 11, opacity: 0.6 }}>Current Queue Position</div>
+                <div style={{ fontSize: 20, fontWeight: "bold" }}>#{queueStatus.absolutePosition}</div>
+              </div>
+              <div style={{ padding: 10, border: "1px solid #0070f3", borderRadius: 6, background: "rgba(0, 112, 243, 0.1)" }}>
+                <div style={{ fontSize: 11, color: "#0070f3" }}>Actual Position (Waiting)</div>
+                <div style={{ fontSize: 20, fontWeight: "bold", color: "#0070f3" }}>#{queueStatus.waitingPosition}</div>
+              </div>
+            </div>
+
             <div style={{ opacity: 0.8, marginTop: 8 }}>
               You have staked {queueStatus.entry.stakeXrp} XRP. Your commitment is on-ledger.
               {queueStatus.entry.commitTxHash && (
@@ -294,11 +304,41 @@ export default function EventClient({ eventId }: { eventId: string }) {
           </div>
         )}
 
-        {commitHash && queueStatus?.status !== "claimed" && (
-          <div style={{ marginTop: 6, padding: 10, border: "1px dashed #444", borderRadius: 4 }}>
-            <div style={{ fontSize: 12, opacity: 0.7 }}><b>CommitHash:</b> {commitHash}</div>
-            <div style={{ opacity: 0.5, fontSize: 11 }}>
-              Secret: {secret} • Nonce: {nonce} (Stored in local storage)
+        {queueStatus && queueStatus.queueList && (
+          <div style={{ marginTop: 24, padding: 16, border: "1px solid #333", borderRadius: 8, background: "#050505" }}>
+            <h2 style={{ marginTop: 0 }}>4. Live Queue (On-Ledger)</h2>
+            <div style={{ display: "grid", gap: 10 }}>
+              {queueStatus.queueList.map((q: any, i: number) => {
+                const isMe = q.wallet === walletAddr;
+                return (
+                  <div key={i} style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 12px",
+                    background: isMe ? "rgba(0, 112, 243, 0.1)" : "#111",
+                    border: isMe ? "1px solid #0070f3" : "1px solid #222",
+                    borderRadius: 6
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: "bold" }}>
+                        #{i + 1} {q.wallet.slice(0, 8)}...{q.wallet.slice(-4)} {isMe && "(You)"}
+                      </div>
+                      <div style={{ fontSize: 11, opacity: 0.6 }}>
+                        Staked at {new Date(q.createdAt).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <a
+                      href={explorerUrl("tx", q.commitTxHash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 11, color: "#0070f3", textDecoration: "none" }}
+                    >
+                      Verify Tx ↗
+                    </a>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -306,3 +346,4 @@ export default function EventClient({ eventId }: { eventId: string }) {
     </>
   );
 }
+

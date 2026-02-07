@@ -13,6 +13,19 @@ export default function MarketplaceClient() {
 
     const xrplWs = process.env.NEXT_PUBLIC_XRPL_WS!;
 
+    // Helper for explorer links
+    const explorerUrl = (type: "tx" | "nft" | "address", id: string) => `https://testnet.xrpl.org/${type === "tx" ? "transactions" : type}/${id}`;
+
+    // Persist seed
+    useEffect(() => {
+        const savedSeed = localStorage.getItem("fen_wallet_seed");
+        if (savedSeed) setSeed(savedSeed);
+    }, []);
+
+    useEffect(() => {
+        if (seed) localStorage.setItem("fen_wallet_seed", seed);
+    }, [seed]);
+
     // Derive wallet address from seed
     useEffect(() => {
         try {
@@ -46,7 +59,6 @@ export default function MarketplaceClient() {
 
     async function handleBuy(offer: any) {
         if (!walletAddr) return alert("Enter your seed first!");
-
         setStatus(`Purchasing ticket for ${offer.priceXrp} XRP…`);
 
         const client = new xrpl.Client(xrplWs);
@@ -54,27 +66,32 @@ export default function MarketplaceClient() {
             await client.connect();
             const wallet = xrpl.Wallet.fromSeed(seed.trim());
 
-            // In a real app, the offerId would be the actual XRPL Offer Index.
-            // For this demo, we'll try to find the offer on-ledger by NFTokenID.
-            const nftOffers = await client.request({
-                command: "nft_sell_offers",
-                nft_id: offer.nftId,
-            });
+            let offerIndexToAccept = offer.offerIndex;
 
-            const actualOffer = (nftOffers.result.offers as any[]).find(o => o.owner === offer.seller);
-            if (!actualOffer) {
-                setStatus("Could not find the sell offer on-ledger.");
-                return;
+            // If offerIndex is missing in DB, try to find it on-ledger as fallback
+            if (!offerIndexToAccept) {
+                const nftOffers = await client.request({
+                    command: "nft_sell_offers",
+                    nft_id: offer.nftId,
+                });
+                const actualOffer = (nftOffers.result.offers as any[]).find(o => o.owner === offer.seller);
+                if (!actualOffer) {
+                    setStatus("Could not find the sell offer on-ledger.");
+                    return;
+                }
+                offerIndexToAccept = actualOffer.nft_offer_index;
             }
 
             const acceptOffer: xrpl.NFTokenAcceptOffer = {
                 TransactionType: "NFTokenAcceptOffer",
                 Account: walletAddr,
-                NFTokenSellOffer: actualOffer.nft_offer_index,
+                NFTokenSellOffer: offerIndexToAccept,
             };
 
             const result = await client.submitAndWait(acceptOffer, { wallet });
-            setStatus("✅ Purchase successful! The NFT ticket is now in your wallet.");
+            const txHash = (result.result as any).hash;
+
+            setStatus(`✅ Purchase successful! Tx: ${txHash}`);
             loadOffers(); // Refresh
         } catch (e: any) {
             setStatus(`Error: ${e.message}`);
@@ -142,9 +159,17 @@ export default function MarketplaceClient() {
 
             {status && (
                 <div style={{ padding: 12, background: "#222", borderRadius: 8, fontSize: 14 }}>
-                    {status}
+                    {status.includes("Tx:") ? (
+                        <>
+                            {status.split("Tx:")[0]}
+                            <a href={explorerUrl("tx", status.split("Tx:")[1].trim())} target="_blank" rel="noopener noreferrer" style={{ color: "#27ae60" }}>
+                                View on Explorer ↗
+                            </a>
+                        </>
+                    ) : status}
                 </div>
             )}
+
         </div>
     );
 }

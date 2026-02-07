@@ -1,6 +1,5 @@
-// app/api/queue/reveal/route.ts
 import { NextResponse } from "next/server";
-import { fenDb } from "@/lib/memoryDb";
+import { fenDb } from "@/lib/db";
 import { sha256Hex } from "@/lib/hash";
 import { refundStake, mintTicketNFT, createNftSellOffer } from "@/lib/xrplSrv";
 import { getTier } from "@/lib/events";
@@ -55,20 +54,24 @@ export async function POST(req: Request) {
         const offerResult = await createNftSellOffer(body.wallet, mintResult.nftID, priceXrp);
 
         // 4) Update DB
-        entry.status = "claimed";
-        entry.revealSecret = body.secret;
-        entry.revealNonce = body.nonce;
-        entry.revealTxHash = refundResult.hash;
-        entry.nftId = mintResult.nftID;
-        (entry as any).offerTxHash = offerResult.hash;
+        const updates = {
+            status: "claimed",
+            revealSecret: body.secret,
+            revealNonce: body.nonce,
+            revealTxHash: refundResult.hash,
+            nftId: mintResult.nftID,
+            offerTxHash: offerResult.hash
+        };
+        fenDb.queue.update(body.wallet, updates);
 
         return NextResponse.json({
             ok: true,
-            refundTxHash: entry.revealTxHash,
+            refundTxHash: updates.revealTxHash,
             mintTxHash: mintResult.hash,
-            nftId: entry.nftId,
-            offerTxHash: (entry as any).offerTxHash
+            nftId: updates.nftId,
+            offerTxHash: updates.offerTxHash
         });
+
 
 
     } catch (error: any) {
