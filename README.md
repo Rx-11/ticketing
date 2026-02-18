@@ -52,9 +52,6 @@ In short: XRPL gives this app the speed, cost profile, and built-in digital asse
 - Split bars and percentages are visible in the event UI.
 - Config-driven structure supports multiple events/tiers.
 
-### 6) Local Persistence for MVP
-- Queue, resale offers, and trust scores are stored in local SQLite (`fen.db`).
-- Optimized for demo/hackathon iteration speed.
 
 ---
 
@@ -277,3 +274,28 @@ It uses XRP Ledger as the **coordination layer** for fairness:
 - and transparent, auditable ticket lifecycle events.
 
 That combination is why XRP/XRPL is not an add-on here — it is the foundation of the product design.
+
+---
+
+## Future Additions
+
+To evolve NFTickets from MVP into a production-grade platform, these are high-value next steps:
+
+### 1) Micropayment-Based Revenue Streaming
+- Split each ticket payment into programmable XRP micropayments for artist, venue, promoter, and platform.
+- Support real-time or batched streaming so stakeholders are paid continuously, not only at settlement milestones.
+- Add transparent payout receipts and per-event earnings dashboards.
+
+### 2) Stronger Fairness Guarantees
+- Enforce commit/reveal windows strictly on server with deterministic cutoffs.
+- Add per-wallet rate limiting, Sybil resistance, and anti-abuse heuristics.
+- Introduce verifiable randomization for tie-breaking and winner selection.
+
+### 3) Advanced Secondary Market Controls
+- Dynamic resale caps based on proximity to event time and demand tiers.
+- Optional allowlists, transfer cooldowns, and resale quantity limits.
+- Built-in royalties and creator fee policies with transparent historical reporting.
+
+### 4) Mobile-First Experience
+- Native mobile app for ticket custody, check-in QR/NFC, and push alerts.
+- One-tap acceptance of NFT offers and event-day wallet flows.
